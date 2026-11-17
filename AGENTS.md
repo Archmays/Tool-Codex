@@ -6,6 +6,8 @@ This is a family-use children’s learning-game repository for literacy, mathema
 
 Keep the child interface clear, feedback understandable, and controls simple. Separate parent-facing explanation from the child play surface. Keep the project lightweight: no enterprise approval flows or speculative infrastructure.
 
+For a new game mechanic or a redesigned interaction, play through one round from the child’s screen. Check that the goal is visible before the first action, the feedback explains what happened, and the child can find how to retry or continue.
+
 ## Architecture boundary
 
 - `apps/hub/` is the shared game hub; `games/` contains individual games; move capabilities into `packages/` only when they are genuinely shared.
