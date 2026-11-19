@@ -54,6 +54,8 @@ Use `machine-first-game-review` for lane 3, lane 4, or an explicit readiness/acc
 
 Stay on the current branch, preserve unrelated work, and normally make one final commit and one push. Do not rewrite history, force-push, or modify existing tags without explicit authorization.
 
+GitHub Pages publishing builds, uploads, and deploys the site. For a publish-only request, confirm deployment and the live build commit. Run game-content and gameplay checks through Portfolio CI or a separate validation task.
+
 ## Task closure and cleanup
 
 - Use `tmp/tasks/<TASK_ID>/`, source freezes, return ZIPs, manifests, retention tiers, and cleanup plan/apply/verify only when the selected route or requested handoff requires them.
