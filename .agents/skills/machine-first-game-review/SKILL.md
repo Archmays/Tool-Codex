@@ -1,6 +1,6 @@
 ---
 name: machine-first-game-review
-description: Run evidence-backed machine review, bounded automatic repair, and source-bound closeout for Game-Codex browser games, shared world routes, and adult observer or review tools.
+description: Review Game-Codex changes to mechanics, learning progression, cross-screen interactions or shared contracts, and explicit acceptance/readiness requests. Use targeted checks for isolated wording or layout fixes.
 ---
 
 # Machine-First Game Review
