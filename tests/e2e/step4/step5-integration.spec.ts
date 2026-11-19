@@ -14,7 +14,7 @@ test('@step5-entry existing trial page exposes exact new modes and keeps feedbac
   await fromHome(page, mode, 'playtest');
   await expect(page.getByRole('heading', {name:'本次试玩', exact:true})).toBeVisible();
   await expect(page.locator('.step4-kicker')).toHaveText('GAME-CODEX · v1.0.0');
-  await expect(page.locator('[data-playtest-entry]')).toHaveCount(13);
+  await expect(page.locator('[data-playtest-entry]')).toHaveCount(16);
   await expect(page.locator('[data-playtest-entry][href*="chapter=companions"]')).toHaveCount(1);
   for (const id of scenarios) await expect(page.locator(`[data-playtest-scenario="${id}"]`)).toHaveAttribute('href', `?play=hanzi-tower-defense&scenario=${id}&from=world`);
   for (let room=1; room<=5; room++) await expect(page.locator(`option[value="companions-${room}"]`)).toHaveCount(1);

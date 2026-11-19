@@ -54,20 +54,6 @@ async function mountApp(root: HTMLElement, search: URLSearchParams, kind: AppRou
   const play = search.get("play");
   activatePageMode(pageModeForSearch(search));
 
-  if (kind === "play" && play === "oddity-puzzles") {
-    setBrowserIdentity("奇物事务所 · 三关试用版", "#ede8da");
-    const [{ mountOddity }, { createLocalStorageStore }] = await Promise.all([import("../games/oddity-puzzles/runtime"), import("../packages/game-core")]);
-    mountOddity({ container: root, storage: createLocalStorageStore("oddity-puzzles"), onExit: () => window.location.assign('?world=my-game-world') });
-    return;
-  }
-
-  if (kind === "play" && play === "world-in-a-box") {
-    setBrowserIdentity("世界盒子 · 窗边有风", "#f2edde");
-    const [{ mountBoxes }, { createLocalStorageStore }] = await Promise.all([import("../games/world-in-a-box/boxes"), import("../packages/game-core")]);
-    mountBoxes({ container: root, storage: createLocalStorageStore("world-in-a-box"), onExit: () => window.location.assign(search.get('from') === 'hub' ? '?hub=classic&from=world' : '?world=my-game-world') });
-    return;
-  }
-
   if (kind === "play" && play === "hanzi-stroke-lab") {
     setBrowserIdentity("汉字书房 · 查字与笔顺", "#f6f3eb");
     const { mountHanziStrokeLab } = await import("../games/hanzi-stroke-lab/workbench");

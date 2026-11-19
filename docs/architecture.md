@@ -59,7 +59,6 @@
 | --- | --- | --- |
 | 改挑战准备或战斗面板 | 字阵 `ui/challenges.ts`、`ui/workbench.ts`、`ui/hud.ts`；动作在 `actions.ts`，`coordinator.ts` 组装。挑战规则仍由 `tactics.ts`/`model.ts` 唯一拥有 | `pnpm exec vitest run tests/hanzi-tower-defense`（含各地图/短关）、`pnpm validate:hanzi-tower-defense`、`pnpm test:e2e:hanzi-tower-defense`；短关另跑 `playwright.short-missions.config.ts` |
 | 改棋盘或教程显示 | 滑轨 `board-view.ts`、`board-panels.ts`；`board-input.ts` 只桥接输入，`board-controller.ts` 调用原 reducer；`index.ts` 管章节/进度 | `pnpm exec vitest run tests/equation-slider`、`pnpm levels:check`、`pnpm test:e2e:equation-slider`；动规则再跑 release 与 visual |
-| 改场景交互 | 世界盒子三 runtime 管各自流程，`box-gesture.ts`/`box-pause.ts`/`box-lifecycle.ts` 管本地平台能力，`continuous-turn.ts` 保留持续旋转。奇物 `action-panel.ts`/`selection.ts`/`landmark-view.ts` 管界面，`action-coordinator.ts` 经既有 Intention 执行与整体取消 | `pnpm test:world-in-a-box`、`pnpm test:oddity-puzzles` 与对应 `test:e2e:*` 深度命令 |
 | 改查字/书写 | 两书房各自 `workbench.ts` 组装，`shelf-view.ts` 管书架。汉字 `query-controller.ts`/`card-view.ts`/`playback.ts` 管查字、卡片和播放，`stroke-view.ts`/`handwriting.ts` 保留原引擎；英语 `writing-board.ts`/`writing-clock.ts`/`word-dialog.ts` 管呈现、时钟和弹窗，`letter-strokes.ts`/`writing-player.ts` 保留原笔顺时间线。各自 model 保有原 schema，输入模块保留各自键位 | `pnpm exec vitest run tests/hanzi-stroke-lab.test.ts tests/english-study.test.ts tests/english-study-writing-clock.test.ts`、`pnpm test:e2e:hanzi-stroke-lab`、`pnpm test:e2e:english-study` |
 | 改存档与设置 | 各游戏自己的 save/progress/model 验证 schema；`game-core` 只封装 namespace 操作；`preferences/world-home.ts` 拥有共享偏好；memory-match `save.ts` 拥有状态分类与写保护；Save Vault 保留原字节/校验/恢复 | `pnpm exec vitest run tests/game-core-storage.test.ts tests/memory-match-save.test.ts tests/maintenance-boundaries.test.ts tests/save-vault`、`pnpm test:e2e:storage`；共享变更再跑受影响消费者 |
 
@@ -78,7 +77,6 @@
 
 英语书房与汉字书房完整命令分别覆盖其配置中的 Chromium/WebKit、桌面/手机/平板。可以用 `--project=chromium-desktop --project=webkit-desktop` 做明确子集；子集通过不代表整矩阵。测试默认启动独立 4191/4192；`ENGLISH_BASE`/`HSL_BASE` 可指定已准备的隔离服务器，输出用 `GAME_CODEX_EVIDENCE_ROOT`。
 
-世界盒子、奇物深度命令由 `tools/maintenance/run-scene-checks.ts` 自动启停独立服务器，默认 4193/4194。生产验证先 `pnpm build`，再 `pnpm test:e2e:world-in-a-box -- --preview` / `pnpm test:e2e:oddity-puzzles -- --preview`。世界盒子 14 个脚本中，11 个使用生产构建；`dresden-geometry`、`step03-surface`、`refine-actions` 需要读取导出网格或安装源码钩子，明确在同一源码的独立 4197 开发服务器执行。源码检查不冒充生产构建证据。`SCENE_BASE_URL` 可指向固定测试构建（须用 `SCENE_CHECKS` 排除上述三个源码检查）；`SCENE_CHECKS` 选择世界盒子脚本，`QA_PROFILES`/`ODDITY_PROFILES` 选择已定义设备，日志须注明所选子集。`test:e2e:oddity-legacy` 专门要求显式 `ODDITY_LEGACY_ORIGIN` 和 `ODDITY_ORIGIN`，旧包不存在时必须报告未验证，不替换为构造当前存档。
 
 家庭启动器固定 `127.0.0.1:5175` 和其存储 origin 不变。所有自动检查使用新建浏览器上下文或专用临时用户目录，不连接用户个人浏览器配置。长浏览器验证使用固定构建，避免开发时 HMR 重置状态。现有截图只做 no-update 比较，不批量更新基线。
 

@@ -12,8 +12,6 @@
 | A 字阵守城 | 挑战、工作台、HUD、动作、输入、scene 和组装分开。37 原函数规范化语义对比相同；0.05 秒步长、随机数、旧六关/新三短关及波前恢复不改。修复重构中 dragend 提前捕获占位回调，有实际回调测试。 |
 | B 算式滑块 | board-view/panels/input/controller 分离，稳定面板节点防止重绑事件；200 关与 evaluator/solver/reducer/进度保留。 |
 | C 字间行者 | 面板、输入、Worker 搜索、暂停和 scene 桥接拆开；请求代次、取消、过期消息和销毁回调有行为测试；规则/房间/求解器保留。 |
-| D 世界盒子 | 各 runtime 保有场景流程，本地手势/暂停/资源生命周期复用；明确 RAF/事件/音频/几何/材质/纹理所有权。Frozen 滚动取消手势补齐；GLB/节点/布局不改。 |
-| E 奇物事务所 | 地标/选择/面板/行动协调/生命周期分开，原 Intention 再校验与整体取消保留；WebGL 构造失败现在进入原失败反馈并可返回。 |
 | F 两书房 | 各自 workbench 组装 shelf/card 或 writing/dialog/input；48 原函数语义对比相同。原笔画、识别 Worker、英语笔顺/时间线/四线格及各自键位不改；英语后台时间修复保留并新增3个时钟测试。 |
 | G 共享设置 | 原偏好下移 packages/preferences/world-home，应用兼容导出；make-target 不再依赖 apps，旧 key/schema/扩展字段保留。 |
 | H 清单与加载 | 保持不同用途清单，继续一致性校验；tower/adventure 轻量定义隔离 Phaser；AST 元数据读取支持独立文件和别名，生成说明注明来源。 |
@@ -30,7 +28,6 @@
 | test:e2e:equation-slider / :release / :visual | 30+13+12通过 | puzzles/ 最终日志及截图 |
 | test:e2e:hanzi-word-adventure | 25通过/3原有设备skip，完整20房间与提示/返回/存档 | puzzles/ 最终日志 |
 | test:e2e:world-in-a-box -- --preview | 14/14脚本：11生产构建，3同源版本源码检查，模式明确记录；7/8种配置及故障矩阵 | scenes/final/world-in-a-box/*.json |
-| test:e2e:oddity-puzzles -- --preview；test:e2e:oddity-legacy | 8种配置完整三关、生命周期7场景、实际v0.1旧包产生的原文存档兼容通过 | scenes/final/oddity-puzzles/ |
 | 四场景直接mount/destroy所有权检查 | 每场景3次，共12次；双destroy后0RAF/观察器/游戏监听，所有AudioContext关闭，pageerrors=0 | scenes/mount-lifecycle.json及复现脚本 |
 | test:e2e:english-study / test:e2e:hanzi-stroke-lab | 英语28+生命周期7通过；汉字143通过/25原有设备skip+生命周期8通过；Chromium/WebKit及各配置设备 | study/ 最终日志 |
 | test:e2e:math-world / test:visual:math-world | 功能102通过/9原有skip；视觉6通过/3原有skip | final-math-browser.log；puzzles/final-math-visual.log |
@@ -43,9 +40,8 @@
 
 ## 失败处置与最终身份
 - 隔离复现的memory覆盖风险有修复前失败日志 `memory-reproduction.log`；最终原文保护/配额/恢复回归通过。重构中dragend占位绑定及恢复说明复用帮助区的焦点问题已修复并回归。
-- 测试前提修正：滑块稳定隐藏面板改用实际可见性判断，保留尺寸要求；Classic过期4数量改为当前5个精确ID；场景3项源码钩子检查由4197运行，其余11项验证生产构建。未把纯静态预览的模块缺失当作通过。
 - 数学历史截图3项在开工HEAD同样失败。HEAD与最终原spec actual的像素及PNG SHA256全部相同；人工及独立语义审阅后，仅复制这3张HEAD actual作为正确基线，随后完整no-update回归通过。没有使用批量update。原失败记录：final-math-visual.log、puzzles/head-math.log；源/旧/新hash：puzzles/snapshot-copy-hashes.json。
-- B/C桌面与390四图逐像素相同，两书房及Classic启动图相同；字阵原入口重建基线与最终代表图相同。三维场景语义/布局对照通过，不把动态时钟和动画截图称为逐像素相同。
+- B/C桌面与390四图逐像素相同，两书房及Classic启动图相同；字阵原入口重建基线与最终代表图相同。
 - 9,911个受保护文件无差异：内容/200关/房间/挑战规则、GLB与素材、成熟模型/笔画/识别引擎、存档身份清单及锁文件保持。运行代码从浏览器矩阵启动到最终构建无变化。
 - 最终全源/QA SHA256：`391d818615905e2f2d7e1adba7cf51a5c190c3326b167281edc4424060434be9`（10,213输入文件）；runtime SHA256：`f19637b0dc16f306e043a517147bbc53c1f54a0b926fae140ff6b947e1c9e949`。算法/逐文件清单在 final-source.json / final-source-lines.txt；运行连续性及构建字节见 source-continuity.json。
 - 首页/Classic启动JS encoded bytes实测471,264→67,539，原提前加载的Phaser 341,710字节移除。未改变实际游戏引擎与玩法。

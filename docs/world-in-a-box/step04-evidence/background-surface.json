@@ -1,8 +1,0 @@
-{
-  "result": "PASS_MACHINE",
-  "checks": [
-    "Real second tab foreground then return: frozen until explicit resume",
-    "Castle slot actual exposed 3D surface clicked outside floating label"
-  ],
-  "slot": null
-}

@@ -29,14 +29,6 @@ function observe(page: Page): RuntimeObservation {
   return result;
 }
 
-async function enterOddityIfNeeded(page: Page, record: PlaySurfaceRecord): Promise<void> {
-  if (new URL(page.url()).searchParams.get("play") !== "oddity-puzzles") return;
-  await expect(page.locator('.odd-stage')).toHaveAttribute('data-ready','true');
-  // The five new abilities have explicit, skippable first-use demonstrations.
-  // Enter through their public controls before testing the room's background controls.
-  while (await page.locator('[data-cmd=skipDemo]').isVisible()) await page.locator('[data-cmd=skipDemo]').click();
-}
-
 async function visibleEnabled(locator: Locator, limit = Infinity): Promise<Locator[]> {
   const result: Locator[] = [];
   const count = await locator.count();
@@ -122,7 +114,6 @@ test("@hittest @representative @portfolio all manifest surfaces expose topmost c
   for (const record of records) {
     await test.step(`${record.id}: hit test, real action, public return`, async () => {
       await page.goto(`/${record.route}`, { waitUntil: "domcontentloaded" });
-      await enterOddityIfNeeded(page, record);
       await expect.poll(async () => (await visibleEnabled(page.locator(record.primaryActionSelector))).length, { message: `${record.id} must expose a visible enabled manifest action` }).toBeGreaterThan(0);
       const actions = await visibleEnabled(page.locator(record.primaryActionSelector));
       const actionEvidence: unknown[] = [];
@@ -147,7 +138,6 @@ test("@hittest @representative @portfolio all manifest surfaces expose topmost c
         // the hit-target checks below and must not consume this poll's deadline.
         return !text.includes("正在打开游戏世界") && (await visibleEnabled(page.locator("a[href], button"), 1)).length > 0;
       }, { message: `${record.id} real action destination must finish loading`, timeout: 30_000 }).toBe(true);
-      await enterOddityIfNeeded(page, record);
       const modalClosed = await closeIntentionalModal(page);
 
       const returnResult = RETURN_WORDS.test(primaryLabel) ? "PRIMARY_ACTION_WAS_RETURN" : "PASS";
@@ -228,7 +218,6 @@ test("@hittest @full 100 transitions leave no stale overlay before primary hit t
   for (let transition = 0; transition < 100; transition += 1) {
     const record = PLAY_SURFACE_MANIFEST[transition % PLAY_SURFACE_MANIFEST.length];
     await page.goto(`/${routes[transition % routes.length]}`, { waitUntil: "domcontentloaded" });
-    await enterOddityIfNeeded(page, record);
     const actions = await expect.poll(async () => (await visibleEnabled(page.locator(record.primaryActionSelector))).length).toBeGreaterThan(0).then(() => visibleEnabled(page.locator(record.primaryActionSelector)));
     const evidence = await expectHitTarget(actions[0], { minimumRatio: 1, minimumSize: 24 });
     if (record.id === "hanzi-word-adventure") {

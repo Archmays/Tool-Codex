@@ -8,13 +8,13 @@
 
 - 实际起点：`12c86dc22b7219a23baeb26efbe7eab9fb0a2da2`
 - 起点 tracked 文件：`708232522` bytes
-- Mount definitions：`11` 保留
+- Mount definitions：`9` 保留
 - Independent tools：`3`
-- Active child products：`5`
+- Active child products：`3`
 - World modules：`2`
 - Compatibility surfaces：`2`
 - Shared engines：`2`
-- 经典大厅：`5` 活跃产品入口
+- 经典大厅：`3` 活跃产品入口
 - 数学世界：`slider / target` 两个自由开放站点，slider 排前
 - 历史治理：本阶段不重写 Git 历史、不强推、不移动或覆盖 tag
 - 家庭稳定基线：`FROZEN`（`game-codex-family-stable-v1.0.0` / `8b890ff14880bcb576dd1ced37e14e6e3df28af1`）
@@ -25,8 +25,6 @@
 | 游戏 | 稳定 ID | 目标世界 | 定义角色 | 产品角色 | 等级 | 生命周期 | 活跃儿童产品 | Classic 卡片 | 规范 route | save namespace |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
 | 结构探索馆 | `structure-explorer` | 共享模块 | 独立查阅工具 | 独立工具 | A | `active` | 否 | 否 | ?play=structure-explorer |  |
-| 奇物事务所 | `oddity-puzzles` | 共享模块 | 活跃儿童产品 | 独立谜题 | B | `active` | 是 | 是 | ?play=oddity-puzzles | `family-games/oddity-puzzles/v1` |
-| 世界盒子 | `world-in-a-box` | 共享模块 | 活跃儿童产品 | 独立谜题 | B | `active` | 是 | 是 | ?play=world-in-a-box | `family-games/world-in-a-box/v1`<br>`family-games/world-in-a-box/dresden-river-campus-v2`<br>`family-games/world-in-a-box/audio-v1`<br>`family-games/world-in-a-box/frozen-elsa-playground-v1` |
 | 汉字书房 | `hanzi-stroke-lab` | 中文世界 | 独立查阅工具 | 独立工具 | A | `active` | 否 | 否 | ?play=hanzi-stroke-lab | `family-games/hanzi-stroke-lab/v1` |
 | 英语书房 | `english-study` | 英语世界 | 独立查阅工具 | 独立工具 | A | `active` | 否 | 否 | ?play=english-study | `family-games/english-study/v1` |
 | 字间行者 | `hanzi-word-adventure` | 中文世界 | 活跃儿童产品 | 独立谜题 | S | `active` | 是 | 是 | ?play=hanzi-word-adventure | `family-games/hanzi-word-adventure/companions/v1`<br>`family-games/hanzi-word-adventure/v2`<br>`family-games/hanzi-word-adventure/v1` |
@@ -38,8 +36,8 @@
 
 ## 分层组合真源
 
-- 活跃儿童产品：`hanzi-tower-defense` / `math-lab` / `hanzi-word-adventure` / `world-in-a-box` / `oddity-puzzles`
-- Classic 投影：`hanzi-tower-defense` / `math-lab` / `hanzi-word-adventure` / `world-in-a-box` / `oddity-puzzles`
+- 活跃儿童产品：`hanzi-tower-defense` / `math-lab` / `hanzi-word-adventure`
+- Classic 投影：`hanzi-tower-defense` / `math-lab` / `hanzi-word-adventure`
 
 | 世界模块 | Host 世界 / 产品 | Mount 定义 | Runtime owner | 质量档 | Runtime save | 规范 route | 引擎 |
 | --- | --- | --- | --- | --- | --- | --- | --- |
@@ -54,7 +52,7 @@
 | 共享引擎 | 路径 | 消费者 |
 | --- | --- | --- |
 | `memory-match` | `packages/activity-engines/memory-match` | `memory-card` |
-| `game-core-local-storage` | `packages/game-core` | `oddity-puzzles`<br>`world-in-a-box`<br>`equation-slider`<br>`math-lab`<br>`make-target`<br>`memory-card` |
+| `game-core-local-storage` | `packages/game-core` | `equation-slider`<br>`math-lab`<br>`make-target`<br>`memory-card` |
 
 ## 项目阶段真源
 

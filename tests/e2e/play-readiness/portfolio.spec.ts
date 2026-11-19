@@ -207,7 +207,7 @@ const primary: readonly { id: string; route: string; surface: string; gameId?: s
   { id: "classic-hub", route: "/?hub=classic&from=world", surface: "[data-testid=classic-hub-from-world]" },
 ] as const;
 
-test("@play-ready all five primary first actions are visible and child-facing", async ({ page }, testInfo) => {
+test("@play-ready primary first actions are visible and child-facing", async ({ page }, testInfo) => {
   const runtime = observe(page);
   const observations: unknown[] = [];
   for (const item of primary) {
@@ -254,7 +254,7 @@ test("@play-ready world, support, Classic, back, reload and resume routes stay c
   await expect(page.getByTestId("my-game-world")).toBeVisible();
   await page.reload(); await expect(page.getByTestId("my-game-world")).toBeVisible();
   await page.goto("/?hub=classic&from=world", { waitUntil: "domcontentloaded" });
-  await expect(page.locator(".game-card")).toHaveCount(5);
+  await expect(page.locator(".game-card")).toHaveCount(3);
   await expect(page.locator('.game-card[data-game-id="memory-card"], .game-card[data-game-id="make-target"]')).toHaveCount(0);
   expectClean(runtime);
 });
@@ -332,7 +332,7 @@ test("@a11y modal focus, language parts, target sizes and 200% zoom stay operabl
   await expect(page.locator("[data-world-forest-link]")).toBeVisible();
   await expect(page.getByTestId("my-game-world")).toHaveAttribute(
     "data-active-child-products",
-    "hanzi-tower-defense math-lab hanzi-word-adventure world-in-a-box oddity-puzzles"
+    "hanzi-tower-defense math-lab hanzi-word-adventure"
   );
   await page.locator("[data-world-forest-link]").focus();
   await expect(page.locator("[data-world-forest-link]")).toBeFocused();

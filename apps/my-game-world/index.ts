@@ -81,8 +81,6 @@ export function mountMyGameWorld(root: HTMLElement, options: MyGameWorldOptions 
         <div class="world-entry__body"><h2>字间行者</h2><p>挪一枚字，变一段路。借来木与不，走回家。</p><span class="world-entry__action">踏上归途<span aria-hidden="true">↗</span></span></div>
       </a>
     </section>
-    <section class="world-hanzi-tool" aria-label="观察与解谜"><a tabindex="0" href="?play=oddity-puzzles" data-world-oddity-link><span class="world-hanzi-tool__glyph" aria-hidden="true">奇</span><span><strong>奇物事务所 · 三个案件</strong><span>观察房间，把两种奇物的本领连起来</span></span><span aria-hidden="true">↗</span></a></section>
-    <section class="world-hanzi-tool" aria-label="拼装小世界"><a tabindex="0" href="?play=world-in-a-box" data-world-box-link><span class="world-hanzi-tool__glyph" aria-hidden="true">窗</span><span><strong>世界盒子 · 三个小世界</strong><span>窗边有风 / 德累斯顿 / 冰雪游乐日</span></span><span aria-hidden="true">↗</span></a></section>
     <section class="world-hanzi-tool" aria-label="中文工具"><a tabindex="0" href="?play=hanzi-stroke-lab" data-world-stroke-link><span class="world-hanzi-tool__glyph" aria-hidden="true">永</span><span><strong>汉字书房</strong><span>查字与笔顺 · 不会读也能手写找字</span></span><span aria-hidden="true">↗</span></a></section>
     <section class="world-hanzi-tool world-english-tool" aria-label="英语工具"><a tabindex="0" href="?play=english-study" data-world-english-link><span class="world-hanzi-tool__glyph" aria-hidden="true">Aa</span><span><strong>英语书房</strong><span>查词与字母笔顺 · 大写小写都能逐笔看</span></span><span aria-hidden="true">↗</span></a></section>
     <section class="world-hanzi-tool" aria-label="结构与工作原理"><a tabindex="0" href="?play=structure-explorer" data-world-structure-link><span class="world-hanzi-tool__glyph" aria-hidden="true">探</span><span><strong>结构探索馆</strong><span>看看里面有什么 · 动手试试怎样工作</span></span><span aria-hidden="true">↗</span></a></section>
@@ -98,7 +96,7 @@ export function mountMyGameWorld(root: HTMLElement, options: MyGameWorldOptions 
   applySettings();
 
   // Navigation-only state belongs to this history entry, never to a save key.
-  const entries = ["forest", "math", "adventure", "stroke", "english", "structure", "treasure", "playtest", "oddity", "box"] as const;
+  const entries = ["forest", "math", "adventure", "stroke", "english", "structure", "treasure", "playtest"] as const;
   for (const entry of entries) {
     root.querySelector(`[data-world-${entry}-link]`)?.addEventListener("click", () => {
       window.history.replaceState({ ...window.history.state, worldHomeReturn: { entry, scrollY: window.scrollY } }, "");
@@ -120,8 +118,6 @@ export function mountMyGameWorld(root: HTMLElement, options: MyGameWorldOptions 
         else if (query.get("play") === "hanzi-stroke-lab") entry = "stroke";
         else if (query.get("play") === "english-study") entry = "english";
         else if (query.get("play") === "structure-explorer") entry = "structure";
-        else if (query.get("play") === "oddity-puzzles") entry = "oddity";
-        else if (query.get("play") === "world-in-a-box") entry = "box";
       }
     }
     if (!entry) return;
