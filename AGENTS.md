@@ -1,8 +1,8 @@
-# Game-Codex project instructions
+# Tool-Codex project instructions
 
 ## Project identity
 
-This is a family-use children’s learning-game repository for literacy, mathematics, science, English, introductory chemistry, and parent-child play.
+This is a family-use toolbox for literacy, English, structure exploration, bead patterns, and parent-child play.
 
 Keep the child interface clear, feedback understandable, and controls simple. Separate parent-facing explanation from the child play surface. Keep the project lightweight: no enterprise approval flows or speculative infrastructure.
 
@@ -14,7 +14,8 @@ For a new game mechanic or a redesigned interaction, play through one round from
 - Reuse the existing Vite/TypeScript/Phaser/DOM-overlay/local-storage architecture.
 - Do not rewrite stable simulation/save/presentation code merely for cleanup.
 - Do not modify unrelated games, duplicate shared logic, create abstractions for one-off use, or split small games into new repositories.
-- For 字阵守城, use `games/hanzi-tower-defense/README.md` and `docs/hanzi-tower-defense/step1-report.md` as current sources. 墨迹森林 and 词光岛 are retired; do not restore their runtime or playable compatibility routes. Preserve language rigor, raw sources, privacy and math contracts.
+- 数学世界、字阵守城、字间行者、墨迹森林、词光岛 are retired. Preserve raw sources, historical records and saves.
+- The bead generator lives in `apps/bead-generator/` and uses its own nested instructions.
 
 ## Child safety and privacy
 

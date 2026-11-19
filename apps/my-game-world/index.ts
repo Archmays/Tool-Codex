@@ -4,6 +4,7 @@ import { ACTIVE_CHILD_PRODUCTS } from "../../packages/data/gamePortfolio";
 import { mountWorldSettings, type WorldSettingsHandle } from "./ui/WorldSettings";
 import { WORLD_COPY } from "./world-copy";
 import {
+  BEAD_GENERATOR_ROUTE,
   CLASSIC_HUB_FROM_WORLD_ROUTE,
   MY_GAME_WORLD_ROUTE,
 } from "./world-routes";
@@ -38,12 +39,6 @@ function removePageClass(name: string): void {
   document.body.classList.remove(name);
 }
 
-function activeProductRoute(id: string): string {
-  const product = ACTIVE_CHILD_PRODUCTS.find((record) => record.id === id);
-  if (!product?.canonicalRoute) throw new Error(`My Game World active product route is missing: ${id}`);
-  return product.canonicalRoute.replace(/([?&])from=hub(?:&|$)/, "$1from=world&").replace(/&$/, "");
-}
-
 export function mountMyGameWorld(root: HTMLElement, options: MyGameWorldOptions = {}): MyGameWorldHandle {
   const storage = options.storage ?? browserStorage();
   let state = readWorldHomeState(storage);
@@ -54,37 +49,16 @@ export function mountMyGameWorld(root: HTMLElement, options: MyGameWorldOptions 
   root.className = "my-game-world-mount";
   const activeProductIds = ACTIVE_CHILD_PRODUCTS.map((record) => record.id).join(" ");
   root.innerHTML = `<main class="my-game-world" data-testid="my-game-world" data-recovered="${String(state.recoveredCalmly)}" data-active-child-products="${activeProductIds}">
-    ${new URLSearchParams(window.location.search).get("notice") === "retired-language" ? '<p class="world-retired-notice" role="status">这个旧游戏已退役。可以从这里选一个游戏；原有存档保留在本机。</p>' : ""}
+    ${new URLSearchParams(window.location.search).get("notice")?.startsWith("retired-") ? '<p class="world-retired-notice" role="status">这个旧游戏已移除。原有存档仍保留在本机。</p>' : ""}
     <header class="world-header">
-      <div><p class="world-kicker">选一个地方，开始玩</p><h1>${WORLD_COPY.title}</h1><p>${WORLD_COPY.subtitle}</p></div>
+      <h1>${WORLD_COPY.title}</h1>
       <button class="world-icon-button" type="button" data-world-settings-open>${WORLD_COPY.settingsAction}</button>
     </header>
-    <section class="world-stage" aria-label="选择游戏世界">
-      <section class="world-object world-object--forest" data-testid="world-forest-portal">
-        <a tabindex="0" class="world-entry" href="${activeProductRoute("hanzi-tower-defense")}" data-world-forest-link>
-          <img src="./assets/home/tower-meadow.webp" width="720" height="420" alt="" decoding="async">
-          <div class="world-entry__body"><h2>${WORLD_COPY.forestTitle}</h2><p>摆下字塔，合出更强的字阵，守住城门。</p>
-          <span class="world-entry__action">${WORLD_COPY.forestFreshAction}<span aria-hidden="true">↗</span></span></div>
-        </a>
-      </section>
-      <section class="world-object world-object--math" data-testid="world-math-portal">
-        <a tabindex="0" class="world-entry" href="${activeProductRoute("math-lab")}" data-world-math-link>
-          <img src="./assets/home/math-world.webp" width="720" height="420" alt="" decoding="async">
-          <div class="world-entry__body"><h2>${WORLD_COPY.mathTitle}</h2><p>滑动算式格，或用数字牌凑出目标。</p>
-          <span class="world-entry__action">${WORLD_COPY.mathAction}<span aria-hidden="true">↗</span></span></div>
-        </a>
-      </section>
-    </section>
-    <section class="world-object world-object--adventure" data-testid="world-adventure-portal">
-      <a tabindex="0" class="world-entry" href="${activeProductRoute("hanzi-word-adventure")}" data-world-adventure-link>
-        <img src="./assets/hanzi-word-adventure/scene.png" width="560" height="560" alt="" decoding="async">
-        <div class="world-entry__body"><h2>字间行者</h2><p>挪一枚字，变一段路。借来木与不，走回家。</p><span class="world-entry__action">踏上归途<span aria-hidden="true">↗</span></span></div>
-      </a>
-    </section>
     <section class="world-hanzi-tool" aria-label="中文工具"><a tabindex="0" href="?play=hanzi-stroke-lab" data-world-stroke-link><span class="world-hanzi-tool__glyph" aria-hidden="true">永</span><span><strong>汉字书房</strong><span>查字与笔顺 · 不会读也能手写找字</span></span><span aria-hidden="true">↗</span></a></section>
     <section class="world-hanzi-tool world-english-tool" aria-label="英语工具"><a tabindex="0" href="?play=english-study" data-world-english-link><span class="world-hanzi-tool__glyph" aria-hidden="true">Aa</span><span><strong>英语书房</strong><span>查词与字母笔顺 · 大写小写都能逐笔看</span></span><span aria-hidden="true">↗</span></a></section>
     <section class="world-hanzi-tool" aria-label="结构与工作原理"><a tabindex="0" href="?play=structure-explorer" data-world-structure-link><span class="world-hanzi-tool__glyph" aria-hidden="true">探</span><span><strong>结构探索馆</strong><span>看看里面有什么 · 动手试试怎样工作</span></span><span aria-hidden="true">↗</span></a></section>
-    <nav class="world-more" aria-label="游戏列表" data-testid="world-treasure-box"><span>也可以打开游戏列表</span><a tabindex="0" href="${CLASSIC_HUB_FROM_WORLD_ROUTE}" data-world-treasure-link>${WORLD_COPY.treasureTitle}<span aria-hidden="true">→</span></a><a tabindex="0" href="?playtest=step4" data-world-playtest-link>本次试玩<span aria-hidden="true">→</span></a></nav>
+    <section class="world-hanzi-tool" aria-label="拼豆工具"><a href="${BEAD_GENERATOR_ROUTE}" data-world-bead-link><span class="world-hanzi-tool__glyph" aria-hidden="true">豆</span><span><strong>MARD 拼豆图纸生成器</strong><span>用图片生成带色号的拼豆图纸</span></span><span aria-hidden="true">↗</span></a></section>
+    <nav class="world-more" aria-label="游戏列表" data-testid="world-treasure-box"><a tabindex="0" href="${CLASSIC_HUB_FROM_WORLD_ROUTE}" data-world-treasure-link>${WORLD_COPY.treasureTitle}<span aria-hidden="true">→</span></a></nav>
     <div class="world-modal-layer" data-world-modal-layer></div>
   </main>`;
 
@@ -96,7 +70,7 @@ export function mountMyGameWorld(root: HTMLElement, options: MyGameWorldOptions 
   applySettings();
 
   // Navigation-only state belongs to this history entry, never to a save key.
-  const entries = ["forest", "math", "adventure", "stroke", "english", "structure", "treasure", "playtest"] as const;
+  const entries = ["stroke", "english", "structure", "bead", "treasure"] as const;
   for (const entry of entries) {
     root.querySelector(`[data-world-${entry}-link]`)?.addEventListener("click", () => {
       window.history.replaceState({ ...window.history.state, worldHomeReturn: { entry, scrollY: window.scrollY } }, "");
@@ -108,13 +82,10 @@ export function mountMyGameWorld(root: HTMLElement, options: MyGameWorldOptions 
     let entry = entries.includes(saved?.entry) ? saved.entry as typeof entries[number] : null;
     if (!entry && document.referrer) {
       const referrer = new URL(document.referrer);
-      if (referrer.origin === window.location.origin && referrer.pathname === window.location.pathname) {
+      if (referrer.origin === window.location.origin && referrer.pathname === new URL(BEAD_GENERATOR_ROUTE, window.location.href).pathname) entry = "bead";
+      else if (referrer.origin === window.location.origin && referrer.pathname === window.location.pathname) {
         const query = referrer.searchParams;
-        if (query.get('playtest') === 'step4') entry = 'playtest';
-        else if (query.get("hub") === "classic") entry = "treasure";
-        else if (query.get("world") === "math-world") entry = "math";
-        else if (query.get("play") === "hanzi-tower-defense") entry = "forest";
-        else if (query.get("play") === "hanzi-word-adventure") entry = "adventure";
+        if (query.get("hub") === "classic") entry = "treasure";
         else if (query.get("play") === "hanzi-stroke-lab") entry = "stroke";
         else if (query.get("play") === "english-study") entry = "english";
         else if (query.get("play") === "structure-explorer") entry = "structure";
@@ -170,5 +141,5 @@ export function mountMyGameWorld(root: HTMLElement, options: MyGameWorldOptions 
   };
 }
 
-export { CLASSIC_HUB_FROM_WORLD_ROUTE, HANZI_TOWER_DEFENSE_ROUTE, MATH_WORLD_ROUTE, MY_GAME_WORLD_ROUTE } from "./world-routes";
+export { CLASSIC_HUB_FROM_WORLD_ROUTE, MY_GAME_WORLD_ROUTE } from "./world-routes";
 export { MY_GAME_WORLD_SETTINGS_KEY, readWorldHomeState, updateWorldSettings } from "./world-state";

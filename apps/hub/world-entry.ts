@@ -9,7 +9,7 @@ export function mountClassicHubFromWorld(root: HTMLElement): MountedGame {
   document.body.classList.add('classic-hub-from-world-page');
   root.className = 'classic-hub-from-world-mount';
   root.innerHTML = `<div class="classic-hub-from-world" data-testid="classic-hub-from-world">
-    <nav class="classic-hub-world-nav" aria-label="游戏百宝箱导航"><a tabindex="0" href="${MY_GAME_WORLD_ROUTE}">← 回我的游戏世界</a></nav>
+    <nav class="classic-hub-world-nav" aria-label="游戏百宝箱导航"><a tabindex="0" href="${MY_GAME_WORLD_ROUTE}">← 返回工具箱</a></nav>
     <div class="classic-hub-world-inner" data-classic-hub-inner></div>
   </div>`;
   const inner = root.querySelector<HTMLElement>('[data-classic-hub-inner]');

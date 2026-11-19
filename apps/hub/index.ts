@@ -23,7 +23,7 @@ export function mountHub(root: HTMLElement): MountedGame {
     const title = document.createElement("h1");
     title.textContent = "游戏百宝箱";
     const subtitle = document.createElement("p");
-    subtitle.textContent = "游戏世界的备用入口；平时也可以从“我的游戏世界”出发。";
+    subtitle.textContent = "选一款游戏开始玩。";
     titleGroup.append(title, subtitle);
     header.append(titleGroup);
 
@@ -93,7 +93,7 @@ export function mountHub(root: HTMLElement): MountedGame {
   if (document.referrer) {
     const referrer = new URL(document.referrer);
     if (referrer.origin === location.origin && referrer.pathname === location.pathname && referrer.searchParams.get("from") === "hub") {
-      const id = referrer.searchParams.get("play") ?? (referrer.searchParams.get("world") === "math-world" ? "math-lab" : null);
+      const id = referrer.searchParams.get("play");
       const card = classicGameCatalog.find(game => game.id === id);
       if (card) root.querySelector<HTMLElement>(`[data-game-id="${card.id}"] :is(a, button)`)?.focus();
     }
@@ -112,46 +112,6 @@ export function mountHub(root: HTMLElement): MountedGame {
 function createGameCard(game: GameDefinition, onPlay: () => void): HTMLElement {
   const card = createPanel("game-card");
   card.dataset.gameId = game.id;
-
-  if (game.id === "hanzi-word-adventure") {
-    card.classList.add("game-card--world", "game-card--word-adventure");
-    const link = document.createElement("a"); link.tabIndex = 0; link.className = "game-card__adventure-link"; link.href = game.route!;
-    const title = document.createElement("h2"); title.textContent = game.title;
-    const art = document.createElement("img"); art.className = "game-card__world-art"; art.src = "./assets/hanzi-word-adventure/scene.png"; art.alt = "";
-    const description = document.createElement("p"); description.textContent = game.description;
-    const action = document.createElement("span"); action.className = "ui-button game-card__button"; action.textContent = game.playLabel!;
-    link.append(title, art, description, action); card.append(link); return card;
-  }
-
-  if (game.id === "hanzi-tower-defense") {
-    card.classList.add("game-card--world", "game-card--hanzi-defense");
-    const title = document.createElement("h2");
-    title.textContent = game.title;
-    const worldArt = document.createElement("img");
-    worldArt.className = "game-card__world-art";
-    worldArt.src = "./assets/home/tower-meadow.webp";
-    worldArt.alt = "青岚关前的草地与城门";
-    const description = document.createElement("p");
-    description.textContent = game.description;
-    const button = createButton(game.playLabel ?? "开始守城", onPlay, { className: "ui-button game-card__button" });
-    card.append(title, worldArt, description, button);
-    return card;
-  }
-
-  if (game.id === "math-lab") {
-    card.classList.add("game-card--world", "game-card--math-world");
-    const title = document.createElement("h2");
-    title.textContent = game.title;
-    const worldArt = document.createElement("img");
-    worldArt.className = "game-card__world-art";
-    worldArt.src = "./assets/math-world/math-world-city-background.webp";
-    worldArt.alt = "明亮的数学实验城市，里面有苹果园、钟楼、方格工坊、数字牌屋和火车站";
-    const description = document.createElement("p");
-    description.textContent = game.description;
-    const button = createButton(game.playLabel ?? "进入数学世界", onPlay, { className: "ui-button game-card__button" });
-    card.append(title, worldArt, description, button);
-    return card;
-  }
 
   const title = document.createElement("h2");
   title.textContent = game.title;

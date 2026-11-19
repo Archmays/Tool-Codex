@@ -19,7 +19,7 @@ function observation(id: string, dateLocal: string, tag: "hesitated" | "technica
   return createObservationRecord({
     dateLocal,
     buildCommit: "8bf24d2e06dd93638cc75601601518d6e854e7f2",
-    surfaceId: "math-world",
+    surfaceId: "memory-independent",
     moment: tag === "technical-glitch" ? "technical" : "during-play",
     tags: [tag],
     parentHelp: "light",
@@ -36,7 +36,7 @@ describe("Natural-use validator, descriptive summarizer and 06B gate", () => {
     ], "8bf24d2e06dd93638cc75601601518d6e854e7f2", new Date("2026-08-22T12:00:00.000Z"));
     const summary = summarizeObservationBundle(bundle);
     expect(summary.evidenceBoundary).toEqual(["DESCRIPTIVE_ONLY", "NOT_STATISTICAL_VALIDATION", "NOT_CHILD_PROFILE"]);
-    expect(summary.repeatedFrictionCandidates).toEqual(expect.arrayContaining([expect.objectContaining({ surfaceId: "math-world", tag: "hesitated", count: 2, distinctDates: 2 })]));
+    expect(summary.repeatedFrictionCandidates).toEqual(expect.arrayContaining([expect.objectContaining({ surfaceId: "memory-independent", tag: "hesitated", count: 2, distinctDates: 2 })]));
     expect(summary.technicalBlockerCandidates).toEqual([expect.objectContaining({ tag: "technical-glitch", count: 1 })]);
     const text = JSON.stringify(summary).toLowerCase();
     expect(text).not.toMatch(/engagementscore|funscore|learningscore|masteryscore|retentionscore|childprofile/);

@@ -74,109 +74,52 @@ const GAMES: readonly SmokeGame[] = [
     },
   },
   {
-    id: "hanzi-word-adventure", title: "字间行者", surface: '[data-testid="hanzi-word-adventure"]',
-    canonicalRoute: "/?play=hanzi-word-adventure",
+    id: "memory-card", title: "记忆配对", surface: ".memory-match",
     async interact(page) {
-      await expect(page.locator('[data-hway-canvas]')).toHaveAttribute('data-ready', 'true');
-      await page.locator('[data-hway-new]').click();
-      await page.locator('[data-hway-chapter="homeward"]').click();
-      const move = page.locator('[data-hway-move="right"]'); await expectUsableTarget(move); await move.click();
-      await expect(page.locator('.hway')).toHaveAttribute('data-player', '9');
-      await page.locator('[data-hway-undo]').click(); await expect(page.locator('.hway')).toHaveAttribute('data-player', '8');
-      await page.locator('[data-hway-exit]').click(); await expect(page.getByTestId('my-game-world')).toBeVisible();
+      const card = page.locator("[data-card-id]:not(:disabled)").first();
+      await expectUsableTarget(card);
+      await card.press("Enter");
+      await page.getByRole("link", { name: /回到游戏百宝箱/ }).click();
+      await expect(page.locator('[data-game-id="memory-card"] button')).toBeFocused();
       return null;
     },
   },
-  {
-    id: "math-lab", title: "数学世界", surface: '[data-testid="math-world-map"]',
-    async interact(page) {
-      const station = page.locator('[data-station-id="slider"] button');
-      await expectUsableTarget(station);
-      await station.click();
-      await expect(page.locator('[data-station-id="slider"] .equation-slider')).toBeVisible({ timeout: 30_000 });
-      await page.getByRole("button", { name: "← 回城市地图" }).click();
-      await expect(page.getByTestId("math-world-map")).toBeVisible();
-      return station;
-    },
-  },
-  {
-    id: "hanzi-tower-defense", title: "字阵守城", surface: '[data-testid="hanzi-tower-defense"]',
-    async interact(page) {
-      const pause = page.locator("[data-td-pause]");
-      await expect(pause).toBeEnabled(); await pause.click();
-      await expect(page.locator(".td-game")).toHaveAttribute("data-paused", "true");
-      await page.locator('[data-core="2"]').click(); await page.locator('[data-slot="0"]').click();
-      await expect(page.locator('[data-structure="top-bottom"]')).toBeVisible();
-      await page.locator('[data-td-fuse]').click();
-      await expect(page.locator('[data-slot="0"]')).toContainText("炎");
-      return pause;
-    },
-  },
-  {
-    id: "make-target", title: "目标工坊", surface: ".make-target-game",
-    canonicalRoute: "/?world=math-world&station=target",
-    async interact(page) {
-      const cards = page.getByTestId("target-cards").locator("button");
-      await cards.nth(0).click();
-      await cards.nth(1).click();
-      await page.getByRole("button", { name: "+", exact: true }).click();
-      const action = page.getByRole("button", { name: "合并" });
-      await expectUsableTarget(action);
-      await action.click();
-      await expect(page.getByTestId("target-history")).toContainText("1 + 2 = 3");
-      return action;
-    },
-  },
-  {
-    id: "equation-slider", title: "算式滑轨", surface: ".equation-slider",
-    canonicalRoute: "/?world=math-world&station=slider",
-    async interact(page) {
-      await page.getByRole("button", { name: "跳过教程" }).click();
-      const action = page.getByRole("button", { name: "第 2 列选上方格" });
-      await expectUsableTarget(action);
-      await action.click();
-      await expect(page.locator("[data-coverage-progress]")).toHaveText("2/6");
-      return action;
-    },
-  },
-] as const;
+];
 
 for (const game of GAMES) {
   test(`@game:${game.id} enters, completes one primary interaction, and returns`, async ({ page }) => {
     const runtime = observeRuntime(page);
-    await page.goto(game.canonicalRoute ?? "/?hub=classic", { waitUntil: "domcontentloaded" });
-    if (!game.canonicalRoute) {
-      await expect(page.locator(".game-card")).toHaveCount(3);
-      const card = page.locator(`.game-card[data-game-id="${game.id}"]`);
-      await expect(card.getByRole("heading", { name: game.title, exact: true })).toBeVisible();
-      const entry = card.getByRole("button");
-      await expectUsableTarget(entry);
-      await entry.focus();
-      await expect(entry).toBeFocused();
-      await page.keyboard.press("Enter");
-    }
-    await expect(page.locator(game.surface)).toBeVisible({ timeout: 30_000 });
+    await page.goto(game.canonicalRoute ?? "/?hub=classic&from=world");
+    if (!game.canonicalRoute) await page.locator(`[data-game-id="${game.id}"] button`).press("Enter");
+    await expect(page.locator(game.surface)).toBeVisible();
     await game.interact(page);
     await expectNoFatalOverflow(page);
-
-    if (game.canonicalRoute) {
-      await page.goto("/?hub=classic", { waitUntil: "domcontentloaded" });
-    } else if (game.id === "hanzi-tower-defense") {
-      await page.locator('[data-td-home]').click();
-    } else if (game.id === "math-lab") {
-      await page.getByRole("link", { name: "回我的游戏世界" }).click();
-      await expect(page.getByTestId("world-treasure-box")).toBeVisible();
-      await page.getByTestId("world-treasure-box").locator('[data-world-treasure-link]').click();
-    } else {
-      const returnButton = page.getByRole("button", { name: "返回大厅", exact: true });
-      await expectUsableTarget(returnButton);
-      await returnButton.focus();
-      await page.keyboard.press("Enter");
-    }
-    await expect(page.locator(".game-card")).toHaveCount(3);
     await expectRuntimeClean(runtime);
   });
 }
+
+test("@portfolio opens the bead generator, generates and exports locally, then restores toolbox focus", async ({ page }, testInfo) => {
+  const runtime = observeRuntime(page);
+  await page.goto("/");
+  await expect(page).toHaveTitle("工具箱");
+  await expect(page.getByRole("heading", { name: "工具箱" })).toBeVisible();
+  const entry = page.getByRole("link", { name: /MARD 拼豆图纸生成器/ });
+  if (testInfo.project.name === "mobile-390") await entry.tap();
+  else await entry.press("Enter");
+  await expect(page).toHaveTitle("MARD 拼豆图纸生成器");
+  await page.getByLabel("上传 JPG、PNG 或 WebP 图片").setInputFiles("apps/bead-generator/tests/fixtures/transparent-shapes.png");
+  await page.getByTestId("generate-button").click();
+  await expect(page.getByTestId("result-panel")).toBeVisible({ timeout: 30000 });
+  for (const id of ["download-preview", "download-chart", "download-csv", "download-pdf"]) {
+    const download = page.waitForEvent("download");
+    await page.getByTestId(id).click();
+    expect(await (await download).failure()).toBeNull();
+  }
+  await expectNoFatalOverflow(page);
+  await page.getByRole("link", { name: /返回工具箱/ }).click();
+  await expect(entry).toBeFocused();
+  await expectRuntimeClean(runtime);
+});
 
 test("@portfolio public route registry preserves current routes and falls back for removed games", async ({ page }) => {
   const runtime = observeRuntime(page);
@@ -190,14 +133,14 @@ test("@portfolio public route registry preserves current routes and falls back f
     ["/?play=world-in-a-box&scene=frozen-elsa-playground&from=hub", '[data-testid="my-game-world"]'],
     ["/?world=english-world", '[data-testid="my-game-world"]'],
     ["/?play=english-spell-battle-legacy&from=hub", '[data-testid="my-game-world"]'],
-    ["/?play=hanzi-tower-defense", '[data-testid="hanzi-tower-defense"]'],
-    ["/?play=hanzi-word-adventure", '[data-testid="hanzi-word-adventure"]'],
-    ["/?world=math-world", '[data-testid="math-world-map"]'],
-    ["/?world=math-world&station=lab", '[data-testid="math-world-map"]'],
-    ["/?world=math-world&station=clock", '[data-testid="math-world-map"]'],
-    ["/?world=math-world&station=array", '[data-testid="math-world-map"]'],
-    ["/?world=math-world&station=target", '[data-station-id="target"] .make-target-game'],
-    ["/?world=math-world&station=slider", '[data-station-id="slider"] .equation-slider'],
+    ["/?play=hanzi-tower-defense", '[data-testid=\"my-game-world\"]'],
+    ["/?play=hanzi-word-adventure", '[data-testid=\"my-game-world\"]'],
+    ["/?world=math-world", '[data-testid=\"my-game-world\"]'],
+    ["/?world=math-world&station=lab", '[data-testid=\"my-game-world\"]'],
+    ["/?world=math-world&station=clock", '[data-testid=\"my-game-world\"]'],
+    ["/?world=math-world&station=array", '[data-testid=\"my-game-world\"]'],
+    ["/?world=math-world&station=target", '[data-testid=\"my-game-world\"]'],
+    ["/?world=math-world&station=slider", '[data-testid=\"my-game-world\"]'],
     ["/?play=hanzi-magic-complete&from=hub", '[data-testid="my-game-world"]'],
     ["/?play=hanzi-magic-complete&view=pinyin", '[data-testid="my-game-world"]'],
     ["/?play=hanzi-magic-complete&view=memory", '[data-testid="my-game-world"]'],
@@ -220,14 +163,12 @@ test("@portfolio bare public URL has the same document-scroll geometry as the ex
   const readWorldGeometry = async () => page.evaluate(() => {
     const app = document.querySelector<HTMLElement>("#app");
     const world = document.querySelector<HTMLElement>("[data-testid=my-game-world]");
-    const stage = document.querySelector<HTMLElement>(".world-stage");
-    if (!app || !world || !stage) throw new Error("My Game World geometry is unavailable");
+    if (!app || !world) throw new Error("My Game World geometry is unavailable");
     return {
       pageMode: [...document.body.classList].find((name) => name.endsWith("-page") && name.startsWith("game-")) ?? "none",
       viewportHeight: window.innerHeight,
       appHeight: app.getBoundingClientRect().height,
       worldHeight: world.getBoundingClientRect().height,
-      stageHeight: stage.getBoundingClientRect().height,
       documentScrollHeight: document.documentElement.scrollHeight,
       documentScrollWidth: document.documentElement.scrollWidth,
       viewportWidth: document.documentElement.clientWidth,
@@ -249,7 +190,6 @@ test("@portfolio bare public URL has the same document-scroll geometry as the ex
   expect(firstLoad.documentScrollWidth).toBe(firstLoad.viewportWidth);
   expect(firstLoad.documentScrollHeight).toBe(explicitRoute.documentScrollHeight);
   expect(firstLoad.appHeight).toBeCloseTo(explicitRoute.appHeight, 0);
-  expect(firstLoad.stageHeight).toBeCloseTo(explicitRoute.stageHeight, 0);
   expect(firstLoad.worldHeight).toBeCloseTo(explicitRoute.worldHeight, 0);
   await expectRuntimeClean(runtime);
 });

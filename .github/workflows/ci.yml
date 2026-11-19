@@ -71,13 +71,8 @@ jobs:
       - name: Run unit, content, and maintenance safety tests
         run: pnpm test
 
-      - name: Validate independent memory and tower defense content and balance
-        run: pnpm run test:memory-match && pnpm run validate:hanzi-tower-defense && pnpm exec tsx tools/hanzi-tower-defense/check-placement.ts
-        env:
-          TD_EVIDENCE_DIR: tmp/tasks/GAME-CODEX-V1.0/tower
-
-      - name: Prove twenty adventure rooms, companion alternatives, and six tactical scenarios
-        run: pnpm exec tsx games/hanzi-word-adventure/tools/solve-step5.ts && pnpm exec tsx tools/hanzi-tower-defense/step5-balance.ts --write
+      - name: Validate bead generator and memory match
+        run: pnpm --filter mard-bead-generator test && pnpm run test:memory-match
 
       - name: Typecheck and production build
         run: pnpm build
@@ -118,18 +113,6 @@ jobs:
 
       - name: Exercise parent-only natural-use observation flow
         run: pnpm run test:e2e:natural-use-kit
-
-      - name: Exercise Math World routes, interactions, saves, and lifecycle
-        run: pnpm run test:e2e:math-world
-
-      - name: Exercise full tower defense battles on manual runs
-        if: github.event_name == 'workflow_dispatch'
-        run: pnpm run test:e2e:hanzi-tower-defense
-        env:
-          TD_EVIDENCE_DIR: tmp/tasks/GAME-CODEX-V1.0/tower
-
-      - name: Verify v1.0 presentation, media, and recovery
-        run: pnpm exec playwright test --config playwright.v1.config.ts --project=desktop --project=phone-390
 
       - name: Upload failure evidence only
         if: failure()

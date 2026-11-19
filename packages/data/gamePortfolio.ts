@@ -101,42 +101,13 @@ export const GAME_PORTFOLIO: readonly GamePortfolioRecord[] = [
     testProfile: "a-core-world", loadingPolicy: "route-lazy", contentStatus: "playable", canonicalDocs: ["games/english-study/README.md"],
   },
   {
-    id: "hanzi-word-adventure", targetWorld: "chinese", productRole: "independent-puzzle", definitionRole: "active-child-product", activeChildProduct: true, classicCardVisible: true, childProductOrder: 3, qualityTier: "S", lifecycleStatus: "active",
-    canonicalRoute: "?play=hanzi-word-adventure", worldModuleIds: [], compatibilitySurfaceIds: [], sharedEngineIds: [], saveNamespaces: ["family-games/hanzi-word-adventure/companions/v1", "family-games/hanzi-word-adventure/v2", "family-games/hanzi-word-adventure/v1"],
-    testProfile: "s-hanzi-release", loadingPolicy: "mixed", contentStatus: "playable", canonicalDocs: ["games/hanzi-word-adventure/README.md"],
-  },
-  {
-    id: "hanzi-tower-defense", targetWorld: "chinese", productRole: "flagship", definitionRole: "active-child-product", activeChildProduct: true, classicCardVisible: true, childProductOrder: 1, qualityTier: "S", lifecycleStatus: "active",
-    canonicalRoute: "?play=hanzi-tower-defense", worldModuleIds: [], compatibilitySurfaceIds: [], sharedEngineIds: [], saveNamespaces: ["family-games/hanzi-tower-defense/tactics/v1", "family-games/hanzi-tower-defense/v3", "family-games/hanzi-tower-defense/v2", "family-games/hanzi-tower-defense/v1"],
-    testProfile: "s-hanzi-release", loadingPolicy: "current-eager", contentStatus: "playable", canonicalDocs: ["games/hanzi-tower-defense/README.md"],
-  },
-  {
-    id: "equation-slider", targetWorld: "math", productRole: "flagship-module", definitionRole: "world-module-mount", activeChildProduct: false, classicCardVisible: false, qualityTier: "S", lifecycleStatus: "active-module",
-    mergeTarget: "math-world/slider-station", canonicalRoute: "?world=math-world&station=slider", worldModuleIds: ["math-equation-slider"], compatibilitySurfaceIds: [], sharedEngineIds: ["game-core-local-storage"], saveNamespaces: ["family-games/equation-slider"],
-    testProfile: "s-equation-release", loadingPolicy: "current-eager", contentStatus: "frozen",
-    canonicalDocs: ["docs/equation-slider/rebuild-v3/11-final-acceptance-report.md", "docs/equation-slider/rebuild-v3/12-final-reflection.md", "docs/portfolio-evolution/portfolio-audit.md"],
-  },
-  {
-    id: "math-lab", targetWorld: "math", productRole: "core-world", definitionRole: "active-child-product", activeChildProduct: true, classicCardVisible: true, childProductOrder: 2, qualityTier: "A", lifecycleStatus: "active",
-    mergeTarget: "math-world", canonicalRoute: "?world=math-world&from=hub", worldModuleIds: [], compatibilitySurfaceIds: [], sharedEngineIds: ["game-core-local-storage"], saveNamespaces: ["family-games/math-world/v1"],
-    testProfile: "a-core-world", loadingPolicy: "route-lazy", contentStatus: "frozen", canonicalDocs: ["games/math-lab/README.md", "docs/portfolio-retirement-step1.md"],
-  },
-  {
-    id: "make-target", targetWorld: "math", productRole: "independent-puzzle", definitionRole: "world-module-mount", activeChildProduct: false, classicCardVisible: false, qualityTier: "B", lifecycleStatus: "active-module",
-    mergeTarget: "math-world/target-workshop", canonicalRoute: "?world=math-world&station=target", worldModuleIds: ["math-make-target"], compatibilitySurfaceIds: [], sharedEngineIds: ["game-core-local-storage"], saveNamespaces: ["family-games/make-target"],
-    testProfile: "b-independent-puzzle", loadingPolicy: "current-eager", contentStatus: "frozen", canonicalDocs: ["games/make-target/README.md"],
-  },
-  {
-    id: "memory-card", targetWorld: "shared", productRole: "module", definitionRole: "compatibility-adapter", activeChildProduct: false, classicCardVisible: false, qualityTier: "C", lifecycleStatus: "compatibility-only",
+    id: "memory-card", targetWorld: "shared", productRole: "independent-puzzle", definitionRole: "active-child-product", activeChildProduct: true, classicCardVisible: true, childProductOrder: 1, qualityTier: "C", lifecycleStatus: "compatibility-only",
     mergeTarget: "shared/memory-match", worldModuleIds: [], compatibilitySurfaceIds: ["memory-definition-adapter"], sharedEngineIds: ["memory-match", "game-core-local-storage"], saveNamespaces: ["family-games/memory-card", "family-games/memory-match/v1"],
     testProfile: "c-module", loadingPolicy: "current-eager", contentStatus: "frozen", canonicalDocs: ["games/memory-card/README.md"],
   },
 ] as const;
 
-export const WORLD_MODULES: readonly WorldModuleRecord[] = [
-  { id: "math-equation-slider", world: "math", title: "算式滑轨站", mountDefinitionId: "equation-slider", runtimeOwnerDefinitionId: "equation-slider", hostProductId: "math-lab", qualityProfile: "s-equation-release", runtimeSaveNamespaces: ["family-games/equation-slider"], route: "?world=math-world&station=slider", status: "active-module" },
-  { id: "math-make-target", world: "math", title: "目标工坊", mountDefinitionId: "make-target", runtimeOwnerDefinitionId: "make-target", hostProductId: "math-lab", qualityProfile: "b-independent-puzzle", runtimeSaveNamespaces: ["family-games/make-target"], route: "?world=math-world&station=target", status: "active-module" },
-] as const;
+export const WORLD_MODULES: readonly WorldModuleRecord[] = [];
 
 /**
  * Nested world modules are not Classic products by default. Any future

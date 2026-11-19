@@ -9,9 +9,7 @@ describe("game catalog", () => {
   it("registers the first batch of migrated single-file games", () => {
     const ids = loadGameCatalogMetadata().map(game => game.id);
     for (const retired of ['multiplication-adventure', 'english-spell-battle', 'clock-reader', 'pinyin-magic-battle']) expect(ids).not.toContain(retired);
-    expect(ids).toContain('make-target');
-    expect(ids).toContain('hanzi-tower-defense');
-    expect(ids.filter(id => id === 'equation-slider')).toHaveLength(1);
+    expect(ids).toEqual(["hanzi-stroke-lab", "english-study", "structure-explorer", "memory-card"]);
   });
 
   it("has shared learning data for the migrated games", () => {
@@ -24,7 +22,8 @@ describe("game catalog", () => {
   it("keeps every catalog game documented for the hub", () => {
     const gameDirs = readdirSync("games", { withFileTypes: true })
       .filter((entry) => entry.isDirectory())
-      .map((entry) => entry.name);
+      .map((entry) => entry.name)
+      .filter((name) => !["equation-slider", "make-target"].includes(name));
 
     expect(gameDirs.sort()).toEqual(GAME_PORTFOLIO.map(record => record.id).sort());
 
@@ -56,10 +55,10 @@ describe("game catalog", () => {
     expect(equationSliderReadme).toContain("42个手工关与158个生成关");
     const rootReadme = readFileSync("README.md", "utf8");
     expect(rootReadme).toContain(`保留 ${GAME_PORTFOLIO.length} 个可挂载定义`);
-    expect(rootReadme).toContain("收敛为 3 个活跃产品");
-    expect(rootReadme).toContain("经典大厅只投影这 3 个产品");
+    expect(rootReadme).toContain("收敛为 1 个活跃产品");
+    expect(rootReadme).toContain("经典大厅只投影这 1 个产品");
     expect(rootReadme).not.toContain("| 汉字大转盘 |");
-    expect(rootReadme.match(/\| 算式滑轨 \|/g)).toHaveLength(1);
+    expect(rootReadme).not.toContain("| 算式滑轨 |");
   });
 
   it("keeps memory card grade sets aligned with the preserved raw grade sets", () => {

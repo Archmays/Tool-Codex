@@ -43,7 +43,7 @@ function record(id: string, dateLocal = "2026-08-22", note?: string): NaturalUse
   return createObservationRecord({
     dateLocal,
     buildCommit: "8bf24d2e06dd93638cc75601601518d6e854e7f2",
-    surfaceId: "math-world",
+    surfaceId: "memory-independent",
     moment: "during-play",
     tags: ["hesitated"],
     parentHelp: "none",
@@ -56,7 +56,7 @@ function sha(value: string): string { return createHash("sha256").update(value).
 
 describe("Natural-use observation schema and local store", () => {
   it("uses only manifest surfaces and the separate non-family-games key", () => {
-    expect(PLAY_SURFACE_MANIFEST.filter(surface => surface.kind === "station").map(surface => surface.id)).toEqual(["math-slider", "math-target"]);
+    expect(PLAY_SURFACE_MANIFEST.filter(surface => surface.kind === "station").map(surface => surface.id)).toEqual([]);
     expect(OBSERVATION_STORAGE_KEY).toBe("game-codex/parent-observation/v1");
     expect(OBSERVATION_STORAGE_KEY.startsWith("family-games/")).toBe(false);
     expect(KNOWN_SAVE_KEYS.some((entry) => entry.key === OBSERVATION_STORAGE_KEY)).toBe(false);
@@ -80,6 +80,7 @@ describe("Natural-use observation schema and local store", () => {
     expect(() => validateObservationRecord({ ...base, childName: "hidden" })).toThrow(/forbidden field: childName/);
     expect(() => validateObservationRecord({ ...base, liked: true })).toThrow(/unknown field: liked/);
     expect(() => validateObservationRecord({ ...base, dateLocal: "2026-08-22T10:30:00Z" })).toThrow(/YYYY-MM-DD/);
+    expect(validateObservationRecord({ ...base, surfaceId: "math-world" }).surfaceId).toBe("math-world");
     expect(() => validateObservationRecord({ ...base, surfaceId: "route-auto-captured" })).toThrow(/PLAY_SURFACE_MANIFEST/);
     expect(() => validateObservationRecord({ ...base, tags: ["liked"] })).toThrow(/unsupported tag/);
   });

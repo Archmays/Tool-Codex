@@ -7,7 +7,6 @@ import {
   type NaturalUseObservationRecord,
 } from "./types";
 import { localDateString, recordsIntegrityPayload, sha256Hex, validateObservationRecord } from "./schema";
-import { PLAY_SURFACE_BY_ID } from "../../data/playSurfaceManifest";
 
 export interface ObservationExportPreview {
   readonly recordCount: number;
@@ -34,7 +33,6 @@ export async function createObservationBundle(
   exportedAt = new Date(),
 ): Promise<NaturalUseObservationBundle> {
   if (!/^[a-f0-9]{40}$/.test(projectBuildCommit) && projectBuildCommit !== "local-source") throw new Error("Project build commit is invalid.");
-  if (records.some((record) => !PLAY_SURFACE_BY_ID.has(record.surfaceId))) throw new Error("Observation contains an unknown play surface.");
   if (records.length > OBSERVATION_MAX_RECORDS) throw new Error("Observation export exceeds the record limit.");
   const copied = records.map((record) => {
     const validated = validateObservationRecord(record);

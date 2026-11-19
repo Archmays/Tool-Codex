@@ -26,7 +26,7 @@ function duplicates(values: readonly string[]): string[] {
 
 export function validatePortfolio(catalog: readonly GameCatalogMetadata[], currentCatalog: readonly GameCatalogMetadata[], root = resolve(import.meta.dirname, "../..")): string[] {
   const issues: string[] = [];
-  const expectedIds = ["structure-explorer", "hanzi-stroke-lab", "english-study", "hanzi-word-adventure", "hanzi-tower-defense", "equation-slider", "math-lab", "make-target", "memory-card"].sort();
+  const expectedIds = ["structure-explorer", "hanzi-stroke-lab", "english-study", "memory-card"].sort();
   if (JSON.stringify(GAME_PORTFOLIO.map(record => record.id).sort()) !== JSON.stringify(expectedIds)) issues.push("Active and compatibility definition inventory differs from retirement contract");
   for (const id of duplicates(GAME_PORTFOLIO.map((record) => record.id))) issues.push(`Duplicate portfolio id: ${id}`);
   const portfolioIds = new Set(GAME_PORTFOLIO.map((record) => record.id));
@@ -40,8 +40,6 @@ export function validatePortfolio(catalog: readonly GameCatalogMetadata[], curre
   for (const id of duplicates(COMPATIBILITY_SURFACES.map((record) => record.id))) issues.push(`Duplicate compatibility surface id: ${id}`);
   for (const id of duplicates(SHARED_ENGINES.map((record) => record.id))) issues.push(`Duplicate shared engine id: ${id}`);
   const profiles = new Map(PORTFOLIO_TEST_PROFILES.map((profile) => [profile.id, profile]));
-  const tiers = new Set<string>(GAME_PORTFOLIO.map((record) => record.qualityTier));
-  for (const tier of ["S", "A", "B", "C"]) if (!tiers.has(tier)) issues.push(`Missing quality tier: ${tier}`);
   for (const record of GAME_PORTFOLIO) {
     const profile = profiles.get(record.testProfile);
     if (!profile) issues.push(`${record.id} uses unknown test profile ${record.testProfile}`);
@@ -53,7 +51,7 @@ export function validatePortfolio(catalog: readonly GameCatalogMetadata[], curre
     if (record.activeChildProduct && !record.childProductOrder) issues.push(`${record.id} active child product needs an order`);
     if (record.definitionRole === "world-module-mount" && record.worldModuleIds.length === 0) issues.push(`${record.id} world-module mount has no module`);
     if (record.definitionRole === "compatibility-adapter" && record.compatibilitySurfaceIds.length === 0) issues.push(`${record.id} compatibility adapter has no compatibility surface`);
-    if (record.contentStatus !== (["structure-explorer", "hanzi-stroke-lab", "english-study", "hanzi-tower-defense", "hanzi-word-adventure"].includes(record.id) ? "playable" : "frozen")) issues.push(`${record.id} content status differs from the authorized new-game / protected-math boundary`);
+    if (record.contentStatus !== (["structure-explorer", "hanzi-stroke-lab", "english-study"].includes(record.id) ? "playable" : "frozen")) issues.push(`${record.id} content status differs from the authorized new-game / protected-math boundary`);
     for (const moduleId of record.worldModuleIds) if (!WORLD_MODULES.some((module) => module.id === moduleId && module.mountDefinitionId === record.id)) issues.push(`${record.id} references an unknown or foreign world module: ${moduleId}`);
     for (const surfaceId of record.compatibilitySurfaceIds) if (!COMPATIBILITY_SURFACES.some((surface) => surface.id === surfaceId)) issues.push(`${record.id} references an unknown compatibility surface: ${surfaceId}`);
     for (const engineId of record.sharedEngineIds) {
@@ -63,9 +61,9 @@ export function validatePortfolio(catalog: readonly GameCatalogMetadata[], curre
     }
     for (const doc of record.canonicalDocs) if (!existsSync(resolve(root, doc))) issues.push(`${record.id} canonical doc does not exist: ${doc}`);
   }
-  const expectedActiveProducts = ["hanzi-tower-defense", "hanzi-word-adventure", "math-lab"];
-  if (JSON.stringify(ACTIVE_CHILD_PRODUCTS.map((record) => record.id).sort()) !== JSON.stringify(expectedActiveProducts)) issues.push("Active child product truth must contain the three current products");
-  if (JSON.stringify(CLASSIC_CARD_PRODUCTS.map((record) => record.id).sort()) !== JSON.stringify(expectedActiveProducts)) issues.push("Classic Hall must project only the three current products");
+  const expectedActiveProducts = ["memory-card"];
+  if (JSON.stringify(ACTIVE_CHILD_PRODUCTS.map((record) => record.id).sort()) !== JSON.stringify(expectedActiveProducts)) issues.push("Active child product truth must contain the current memory game");
+  if (JSON.stringify(CLASSIC_CARD_PRODUCTS.map((record) => record.id).sort()) !== JSON.stringify(expectedActiveProducts)) issues.push("Classic Hall must project only the current memory game");
   for (const exception of CLASSIC_CARD_EXCEPTIONS) if (!portfolioIds.has(exception.definitionId)) issues.push(`Classic-card exception references unknown definition: ${exception.definitionId}`);
   for (const module of WORLD_MODULES) {
     const mount = GAME_PORTFOLIO.find((record) => record.id === module.mountDefinitionId);
@@ -123,8 +121,8 @@ export function validatePortfolio(catalog: readonly GameCatalogMetadata[], curre
   if (PROJECT_LIFECYCLE_TERMINAL_TRUTH.realChildValidation !== "NOT_PERFORMED_AND_NOT_CLAIMED") issues.push("Real-child validation boundary drifted");
   if (PRIMARY_WORLDS.length !== 2) issues.push(`Expected two primary product domains, found ${PRIMARY_WORLDS.length}`);
   for (const id of duplicates(PLAY_SURFACE_MANIFEST.map((record) => record.id))) issues.push(`Duplicate play surface id: ${id}`);
-  if (JSON.stringify(PLAY_SURFACE_MANIFEST.filter(surface => surface.kind === "station").map(surface => surface.id)) !== JSON.stringify(["math-slider", "math-target"])) issues.push("Math station surfaces differ from retirement contract");
-  if (PRIMARY_PLAY_SURFACES.length !== 5) issues.push(`Expected five primary first-use surfaces, found ${PRIMARY_PLAY_SURFACES.length}`);
+  if (JSON.stringify(PLAY_SURFACE_MANIFEST.filter(surface => surface.kind === "station").map(surface => surface.id)) !== JSON.stringify([])) issues.push("Math station surfaces differ from retirement contract");
+  if (PRIMARY_PLAY_SURFACES.length !== 3) issues.push(`Expected three primary first-use surfaces, found ${PRIMARY_PLAY_SURFACES.length}`);
   for (const surface of PLAY_SURFACE_MANIFEST) {
     if (!surface.route || !surface.returnRoute || !surface.primaryActionSelector) issues.push(`Incomplete play surface contract: ${surface.id}`);
     if (surface.kind === "station") {
@@ -140,8 +138,6 @@ export function validatePortfolio(catalog: readonly GameCatalogMetadata[], curre
     }
     if (surface.kind === "classic-entry" && (!surface.topLevelProductId || !ACTIVE_CHILD_PRODUCTS.some((record) => record.id === surface.topLevelProductId))) issues.push(`${surface.id} Classic entry is not a top-level child product`);
   }
-  const slider = PLAY_SURFACE_MANIFEST.find((surface) => surface.id === "math-slider");
-  if (!slider || slider.route !== "?world=math-world&station=slider" || slider.runtimeOwnerDefinitionId !== "equation-slider" || slider.qualityProfile !== "s-equation-release" || JSON.stringify(slider.runtimeSaveNamespaces) !== JSON.stringify(["family-games/equation-slider"])) issues.push("Math Slider runtime/route/profile/save contract drifted");
   for (const key of duplicates(KNOWN_SAVE_KEYS.map((record) => record.key))) issues.push(`Duplicate known save key: ${key}`);
   for (const namespace of portfolioNamespacesWithoutKnownKey()) issues.push(`Portfolio namespace missing from Save Vault inventory: ${namespace}`);
   return issues;

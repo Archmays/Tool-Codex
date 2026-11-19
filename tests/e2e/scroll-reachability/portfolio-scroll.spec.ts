@@ -3,7 +3,6 @@ import { resolve } from "node:path";
 import { expect, test, type Page } from "@playwright/test";
 import { PLAY_SURFACE_MANIFEST, type PlaySurfaceRecord } from "../../../packages/data/playSurfaceManifest";
 import { sampleHitTarget } from "../helpers/hit-target";
-import { revealControl } from "../step4/input-helpers";
 import {
   expectFullyVisibleInScrollport,
   expectMeaningfullyVisibleInScrollport,
@@ -25,11 +24,8 @@ const TOUCH_PROJECTS = new Set(["mobile-360", "mobile-390", "tablet-768", "lands
 const REPRESENTATIVE_IDS = new Set([
   "my-game-world",
   "classic-hub",
-  "hanzi-tower-defense",
-  "hanzi-word-adventure",
-  "math-world",
-  "math-slider",
-  "math-target",
+  "memory-independent",
+  "structure-explorer",
 ]);
 
 function writeReport(name: string, value: unknown): void {
@@ -143,19 +139,12 @@ async function auditSurface(page: Page, surface: PlaySurfaceRecord, touch: boole
       // The math entry is one semantic button containing both artwork and its
       // labelled action area. At document bottom, the action area must be fully
       // reachable; the decorative roof may already have scrolled above it.
-      const actionArea = surface.id === "math-world" ? action.locator(".math-map__info") : action;
+      const actionArea = action;
       await expectFullyVisibleInScrollport(page, surface, actionArea);
       const evidence = await sampleHitTarget(actionArea);
       expect(evidence.hitSuccessRatio, JSON.stringify(evidence, null, 2)).toBe(1);
       bottomCriticalAction = evidence.label || evidence.selector;
       hitTest = "PASS";
-      if (surface.id === "math-world") {
-        const station = await action.evaluate(element => element.closest<HTMLElement>("[data-station-id]")!.dataset.stationId);
-        await actionArea.locator(".math-map__enter").click();
-        await expect(page).toHaveURL(new RegExp(`station=${station}(?:&|$)`));
-        await page.goBack();
-        await expect(page.locator(".math-map")).toBeVisible();
-      }
     } else {
       bottomCriticalAction = "NONE_NEAR_BOTTOM";
       hitTest = "NOT_APPLICABLE";
@@ -221,11 +210,6 @@ test("@scroll @representative modal close restores each surface's declared scrol
   test.skip(!["desktop-1366", "mobile-390"].includes(testInfo.project.name));
   const runtime = runtimeObserver(page);
   const familyWorld = PLAY_SURFACE_MANIFEST.find(record => record.id === "my-game-world")!;
-  await page.goto("/?play=hanzi-tower-defense");
-  await revealControl(page, "[data-td-restart]", "mouse");
-  const restart = page.locator("[data-td-restart]"); await restart.click();
-  await expect(page.locator("[data-td-restart-dialog]")).toBeVisible(); await page.keyboard.press("Escape"); await expect(restart).toBeFocused();
-  expect(await page.locator("body").evaluate(body => getComputedStyle(body).overflowY)).toBe("auto");
   await page.goto("/?world=my-game-world", { waitUntil: "domcontentloaded" });
   const parent = page.getByRole("button", { name: /家长角/ });
   await parent.click();
@@ -240,5 +224,5 @@ test("@scroll @representative modal close restores each surface's declared scrol
   await page.keyboard.press("Escape");
   expect(await page.locator("body").evaluate((body) => getComputedStyle(body).overflowY)).toBe("auto");
   expect(runtime.errors).toEqual([]);
-  writeReport(`MODAL_SCROLL_RESTORE.${testInfo.project.name}.json`, { verdict: "PASS", project: testInfo.project.name, towerDefenseRestart: "PASS_DOCUMENT_OWNER_RESTORED", worldSettingsAndSaveVaultHost: "PASS_DOCUMENT_OWNER_RESTORED", observationNotebook: "PASS_DOCUMENT_OWNER_RESTORED", staleBodyScrollLock: 0 });
+  writeReport(`MODAL_SCROLL_RESTORE.${testInfo.project.name}.json`, { verdict: "PASS", project: testInfo.project.name, worldSettingsAndSaveVaultHost: "PASS_DOCUMENT_OWNER_RESTORED", observationNotebook: "PASS_DOCUMENT_OWNER_RESTORED", staleBodyScrollLock: 0 });
 });

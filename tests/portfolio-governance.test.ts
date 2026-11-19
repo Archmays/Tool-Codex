@@ -23,29 +23,26 @@ describe("game portfolio governance", () => {
 
   it("represents the live catalog one-to-one with valid governance identities", () => {
     expect(validatePortfolio(gameCatalog, currentClassicGameCatalog)).toEqual([]);
-    expect(GAME_PORTFOLIO.map(record => record.id)).toEqual(["structure-explorer", "hanzi-stroke-lab", "english-study", "hanzi-word-adventure", "hanzi-tower-defense", "equation-slider", "math-lab", "make-target", "memory-card"]);
+    expect(GAME_PORTFOLIO.map(record => record.id)).toEqual(["structure-explorer", "hanzi-stroke-lab", "english-study", "memory-card"]);
     expect(new Set(GAME_PORTFOLIO.map((record) => record.id)).size).toBe(GAME_PORTFOLIO.length);
     expect(new Set(GAME_PORTFOLIO.flatMap((record) => record.saveNamespaces)).size).toBe(
       GAME_PORTFOLIO.flatMap((record) => record.saveNamespaces).length,
     );
-    expect(new Set(GAME_PORTFOLIO.map((record) => record.qualityTier))).toEqual(new Set(["S", "A", "B", "C"]));
+    expect(new Set(GAME_PORTFOLIO.map((record) => record.qualityTier))).toEqual(new Set(["A", "C"]));
     expect(ACTIVE_CHILD_PRODUCTS.map((record) => record.id)).toEqual([
-      "hanzi-tower-defense", "math-lab", "hanzi-word-adventure"
+      "memory-card"
     ]);
     expect(CLASSIC_CARD_PRODUCTS.map((record) => record.id)).toEqual([
-      "hanzi-tower-defense", "math-lab", "hanzi-word-adventure"
+      "memory-card"
     ]);
-    expect(WORLD_MODULES.filter(module => module.world === "math").map(module => module.id)).toEqual(["math-equation-slider", "math-make-target"]);
+    expect(WORLD_MODULES.filter(module => module.world === "math").map(module => module.id)).toEqual([]);
     expect(COMPATIBILITY_SURFACES).toHaveLength(2);
     expect(SHARED_ENGINES).toHaveLength(2);
-    expect(currentClassicGameCatalog).toHaveLength(3);
+    expect(currentClassicGameCatalog).toHaveLength(1);
     expect(classicGameCatalog.map(game => game.id)).toEqual(CLASSIC_CARD_PRODUCTS.map(record => record.id));
     expect(GAME_PORTFOLIO.filter((record) => !record.classicCardVisible).map((record) => record.id).sort()).toEqual([
       "english-study",
-      "equation-slider",
       "hanzi-stroke-lab",
-      "make-target",
-      "memory-card",
       "structure-explorer",
     ]);
   });
@@ -59,8 +56,7 @@ describe("game portfolio governance", () => {
   });
 
   it("rejects a nested world module Classic card unless its exception is explicit and identity-bound", () => {
-    const equation = GAME_PORTFOLIO.find((record) => record.id === "equation-slider");
-    if (!equation) throw new Error("Equation definition is missing");
+    const equation = { ...GAME_PORTFOLIO[0], id: "equation-slider", definitionRole: "world-module-mount" as const, worldModuleIds: ["math-equation-slider"] };
     const exposed = { ...equation, classicCardVisible: true };
     expect(isClassicCardExposureAllowed(exposed, [])).toBe(false);
     expect(isClassicCardExposureAllowed(exposed, [{
@@ -75,7 +71,7 @@ describe("game portfolio governance", () => {
     expect(checkGeneratedDocs()).toEqual([]);
     const status = readFileSync("docs/project-status/portfolio-status.md", "utf8");
     expect(status).toContain(`Mount definitions：\`${GAME_PORTFOLIO.length}\``);
-    expect(status).toContain("Active child products：`3`");
+    expect(status).toContain("Active child products：`1`");
     expect(status).toContain("NO_BY_USER_DIRECTION_AND_NOT_A_DEVELOPMENT_GATE");
   });
 
@@ -87,7 +83,7 @@ describe("game portfolio governance", () => {
     expect(PROJECT_LIFECYCLE_TERMINAL_TRUTH.automaticLargeTask).toBe("NONE");
     expect(new Set(PLAY_SURFACE_MANIFEST.map((surface) => surface.id)).size).toBe(PLAY_SURFACE_MANIFEST.length);
     expect(PRIMARY_PLAY_SURFACES.map((surface) => surface.id)).toEqual([
-      "hanzi-word-adventure", "my-game-world", "classic-hub", "hanzi-tower-defense", "math-world",
+      "memory-independent", "my-game-world", "classic-hub",
     ]);
     expect(new Set(KNOWN_SAVE_KEYS.map((record) => record.key)).size).toBe(KNOWN_SAVE_KEYS.length);
     expect(portfolioNamespacesWithoutKnownKey()).toEqual([]);
@@ -100,28 +96,6 @@ describe("game portfolio governance", () => {
       "Portfolio Evolution evidence and generated audit",
     ]);
 
-    const game = affectedGateCommands(["games/clock-reader/index.ts"]);
-    expect(game.map((command) => command.label)).toEqual([
-      "portfolio consistency",
-      "Portfolio Evolution evidence and generated audit",
-      "Math World model, content, and save gates",
-      "Math World portfolio and replacement contract",
-      "Math World routes, interactions, and lifecycle",
-    ]);
-
-    const equation = affectedGateCommands(["games/equation-slider/board-state.ts"]);
-    expect(equation.map((command) => command.label)).toEqual([
-      "portfolio consistency",
-      "Portfolio Evolution evidence and generated audit",
-      "unit and content tests",
-      "Equation Slider deterministic 200-level audit",
-      "Equation Slider core browser profile",
-      "Equation Slider S release browser profile",
-      "Equation Slider visual and geometry profile",
-      "Equation Slider bounded agent playtest",
-      "equation-slider entry/interaction/return smoke",
-    ]);
-
     const shared = affectedGateCommands(["packages/game-core/index.ts"]);
     expect(shared.map((command) => command.label)).toEqual([
       "portfolio consistency",
@@ -129,14 +103,10 @@ describe("game portfolio governance", () => {
       "UI occlusion inventory and interaction-integrity contracts",
       "play-surface scroll ownership contracts",
       "unit and content tests",
-      "Math World portfolio and replacement contract",
+      "Bead generator tests",
       "Independent memory-match content and save contracts",
       "typecheck",
       "production build",
-      "Math World routes, interactions, and lifecycle",
-      "Hanzi tower defense full browser battle",
-      "Word adventure bounded state search and replay",
-      "Word adventure five-room keyboard and touch play",
       "English Study Chromium/WebKit device matrix",
       "Hanzi Study Chromium/WebKit device matrix",
       "Structure Explorer input and lifecycle device matrix",
@@ -149,40 +119,7 @@ describe("game portfolio governance", () => {
     expect(affectedGateCommands(["<unknown>"]).at(-1)?.label).toBe("all-game portfolio smoke");
   });
 
-  it("selects full tower battles for tower changes and runtime dependencies", () => {
-    const battle = "test:e2e:hanzi-tower-defense";
-    const selected = (files: string[]) => affectedGateCommands(files).map(command => command.args[1]);
-    const lobbyChanges = [
-      "src/main.ts", "apps/my-game-world/index.ts", "packages/data/playSurfaceManifest.ts",
-      "packages/data/saveKeyInventory.ts", "package.json",
-    ];
-    expect(selected(lobbyChanges)).toContain("test:portfolio:smoke");
-    expect(selected(lobbyChanges)).not.toContain(battle);
-    expect(selected(["docs/hanzi-tower-defense/guide.md"])).not.toContain(battle);
-    expect(selected([
-      ...lobbyChanges, "games/hanzi-tower-defense/model.ts", "packages/ui/input.ts",
-    ]).filter(command => command === battle)).toHaveLength(1);
-    for (const path of [
-      "games/hanzi-tower-defense/model.ts", "packages/ui/input.ts",
-      "packages/presentation/settings.ts", "public/assets/v1.0/tower/icon.svg",
-      "tests/e2e/hanzi-tower-defense/controls.spec.ts", "pnpm-lock.yaml", "<unknown>",
-    ]) expect(selected([path]), path).toContain(battle);
-  });
-
-  it("keeps consolidated support and Classic return routes aligned with runtime context", () => {
-    expect(PLAY_SURFACE_MANIFEST.find((surface) => surface.id === "classic-math")?.returnRoute).toBe("?world=my-game-world");
-    for (const id of ["classic-defense"]) {
-      expect(PLAY_SURFACE_MANIFEST.find((surface) => surface.id === id)?.returnRoute).toBe("?hub=classic&from=world");
-    }
-    expect(PLAY_SURFACE_MANIFEST.find((surface) => surface.id === "math-slider")).toMatchObject({
-      mountDefinitionId: "equation-slider",
-      runtimeOwnerDefinitionId: "equation-slider",
-      topLevelProductId: "math-lab",
-      worldModuleId: "math-equation-slider",
-      hostWorldId: "math",
-      qualityProfile: "s-equation-release",
-      runtimeSaveNamespaces: ["family-games/equation-slider"],
-      hostSaveNamespaces: ["family-games/math-world/v1"],
-    });
+  it("keeps retained Classic return routes aligned with runtime context", () => {
+    expect(PLAY_SURFACE_MANIFEST.find((surface) => surface.id === "memory-independent")?.returnRoute).toBe("?hub=classic&from=world");
   });
 });

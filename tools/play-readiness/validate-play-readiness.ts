@@ -27,10 +27,7 @@ function gitFiles(): string[] {
 function sha256File(path: string): string { return createHash("sha256").update(readFileSync(path)).digest("hex"); }
 
 const feedbackSamples = [
-  ["hanzi-tower-defense", "Chinese", "outcome-specific", "scaffolded", "错误组合保留材料并提示换顺序；合字预览真实结构，失败可重玩。"],
   ["memory-match", "Shared", "outcome-specific", "actionable-hint", "翻牌状态保持可见，可继续选择另一张，不扣分。"],
-  ["make-target", "Math", "outcome-specific", "actionable-hint", "不可用组合说明当前结果并保留卡片，可换运算。"],
-  ["equation-slider", "Math", "outcome-specific", "scaffolded", "覆盖进度与算式状态同步；加载失败回线路图，不显示内部错误。"],
 ] as const;
 
 const tracked = gitFiles().filter(path => existsSync(resolve(ROOT, path)));
@@ -59,9 +56,9 @@ if (PROJECT_LIFECYCLE_TERMINAL_TRUTH.familyStableBaselineTag !== "game-codex-fam
 if (PROJECT_LIFECYCLE_TERMINAL_TRUTH.realEvidencePatchCount !== 2) issues.push("evidence patch count");
 if (PROJECT_LIFECYCLE_TERMINAL_TRUTH.interactionIntegrity !== "HITTEST_AND_REACHABILITY_GUARD_ACTIVE") issues.push("interaction-integrity boundary");
 if (AUTHORIZED_DEVELOPMENT_CYCLES.length !== 2 || AUTHORIZED_DEVELOPMENT_CYCLES.at(-1)?.id !== "gameplay-coherence-02" || AUTHORIZED_DEVELOPMENT_CYCLES.some((cycle) => cycle.naturalUseObservationImpact !== "ONGOING_NOT_CLOSED")) issues.push("bounded development cycle boundary");
-if (JSON.stringify(GAME_PORTFOLIO.map(record => record.id).sort()) !== JSON.stringify(["structure-explorer", "hanzi-stroke-lab", "english-study", "hanzi-word-adventure", "hanzi-tower-defense", "equation-slider", "math-lab", "make-target", "memory-card"].sort())) issues.push("portfolio retirement inventory");
-if (JSON.stringify(PLAY_SURFACE_MANIFEST.filter(surface => surface.kind === "station").map(surface => surface.id)) !== JSON.stringify(["math-slider", "math-target"]) || PRIMARY_PLAY_SURFACES.length !== 5) issues.push("play surface inventory");
-if (PLAY_SURFACE_MANIFEST.filter((surface) => surface.kind === "classic-entry").length !== 3) issues.push("Classic count");
+if (JSON.stringify(GAME_PORTFOLIO.map(record => record.id).sort()) !== JSON.stringify(["structure-explorer", "hanzi-stroke-lab", "english-study", "memory-card"].sort())) issues.push("portfolio retirement inventory");
+if (JSON.stringify(PLAY_SURFACE_MANIFEST.filter(surface => surface.kind === "station").map(surface => surface.id)) !== JSON.stringify([]) || PRIMARY_PLAY_SURFACES.length !== 3) issues.push("play surface inventory");
+if (PLAY_SURFACE_MANIFEST.filter((surface) => surface.kind === "classic-entry").length !== 0) issues.push("Classic count");
 if (KNOWN_SAVE_KEYS.length !== 48 || EXPORTABLE_SAVE_KEYS.length !== 47 || portfolioNamespacesWithoutKnownKey().length) issues.push("save key inventory");
 if (prohibitedRuntimeTransmission.length) issues.push("prohibited runtime transmission");
 if (duplicateTrackedLargeBinaryGroups.length) issues.push("duplicate tracked large binaries");

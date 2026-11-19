@@ -15,7 +15,7 @@ function classTarget() {
 
 describe("play-surface scroll integrity", () => {
   it("classifies every current surface as naturally document-scrollable", () => {
-    expect(PLAY_SURFACE_MANIFEST.filter(surface => surface.kind === "station").map(surface => surface.id)).toEqual(["math-slider", "math-target"]);
+    expect(PLAY_SURFACE_MANIFEST.filter(surface => surface.kind === "station").map(surface => surface.id)).toEqual([]);
     expect(PLAY_SURFACE_MANIFEST.filter((surface) => surface.scrollPolicy === "document")).toHaveLength(PLAY_SURFACE_MANIFEST.length);
     expect(PLAY_SURFACE_MANIFEST.filter((surface) => surface.scrollPolicy === "internal").map((surface) => surface.id)).toEqual([
     ]);
@@ -25,10 +25,10 @@ describe("play-surface scroll integrity", () => {
 
   it("uses the most specific surface query instead of a route-family fullscreen default", () => {
     const tower = new URLSearchParams("play=hanzi-tower-defense&from=world");
-    expect(playSurfaceForSearch(tower)?.id).toBe("hanzi-tower-defense");
+    expect(playSurfaceForSearch(tower)).toBeNull();
     expect(pageModeForSearch(tower)).toBe("game-scrollable");
     const station = new URLSearchParams("world=math-world&station=target&from=hub");
-    expect(playSurfaceForSearch(station)?.id).toBe("math-target");
+    expect(playSurfaceForSearch(station)).toBeNull();
     for (const retired of ["world=english-world&view=journal", "play=hanzi-magic-complete&slice=family", "play=hanzi-v2-v1&from=world"]) {
       expect(playSurfaceForSearch(new URLSearchParams(retired))).toBeNull();
       expect(pageModeForSearch(new URLSearchParams(retired))).toBe("game-scrollable");

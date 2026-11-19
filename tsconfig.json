@@ -12,5 +12,6 @@
     "skipLibCheck": true,
     "types": ["vitest/globals", "node", "vite/client"]
   },
-  "include": ["apps", "games", "packages", "src", "tests", "vite.config.ts", "vitest.config.ts"]
+  "include": ["apps", "games", "packages", "src", "tests", "vite.config.ts", "vitest.config.ts"],
+  "exclude": ["apps/bead-generator"]
 }

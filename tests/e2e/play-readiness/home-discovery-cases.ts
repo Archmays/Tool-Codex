@@ -8,29 +8,15 @@ const raw = (page: Page) => page.evaluate(key => localStorage.getItem(key), KEY)
 export function homeDiscoveryTests(): void {
   test("@play-ready @home-discovery unified entries preserve history, explicit return and focus", async ({ page }, info) => {
     const activate = async (selector: string) => info.project.use.hasTouch ? page.locator(selector).tap() : page.locator(selector).click();
-    const errors: string[] = [], images: string[] = [], scripts: string[] = [];
+    const errors: string[] = [];
     page.on("pageerror", error => errors.push(error.message));
-    page.on("request", request => {
-      if (request.resourceType() === "image") images.push(request.url());
-      if (request.resourceType() === "script") scripts.push(new URL(request.url()).pathname);
-    });
     await page.goto("/");
-    await expect(page.locator(".world-stage .world-entry")).toHaveCount(2);
-    await expect(page.locator(".world-entry")).toHaveCount(3);
-    await expect(page.locator(".world-stage a a,.world-stage button,canvas")).toHaveCount(0);
-    await expect(page.locator(".world-more a")).toHaveCount(2);
-    await expect(page.locator('[data-world-treasure-link]')).toBeVisible();
-    await expect(page.locator('[data-world-playtest-link]')).toBeVisible();
-    await expect(page.locator(".world-stage")).not.toContainText(/72字|48词|200关|完成率|试点|版本|最新升级/);
-    await page.waitForLoadState("networkidle");
-    expect(images.filter(url => !url.includes("/assets/home/") && !url.includes("/assets/hanzi-word-adventure/scene.png"))).toEqual([]);
-    // Route normalization shares historical station IDs with this lightweight
-    // save module. No game implementation or activity engine belongs on home.
-    expect(scripts.filter(path => /\/games\/|\/activity-engines\//.test(path)
-      && path !== '/games/math-lab/world/world-save.ts')).toEqual([]);
-    expect(await page.locator('[data-world-forest-link] img').evaluate((image: HTMLImageElement) => image.complete && image.naturalWidth === 1536)).toBe(true);
+    await expect(page).toHaveTitle("工具箱");
+    await expect(page.locator(".world-hanzi-tool a")).toHaveCount(4);
+    await expect(page.locator(".world-more a")).toHaveCount(1);
+    await expect(page.locator("canvas")).toHaveCount(0);
 
-    for (const [id, surface] of [["forest", '[data-testid="hanzi-tower-defense"]'], ["math", '[data-testid="math-world-map"]'], ["treasure", '[data-testid="classic-hub-from-world"]'], ["playtest", '[data-testid="step4-playtest"]']]) {
+    for (const [id, surface] of [["stroke", "[data-search]"], ["english", "[data-es-search]"], ["treasure", "[data-testid=classic-hub-from-world]"], ["bead", "[data-testid=generate-button]"]]) {
       const entry = page.locator(entrySelector(id));
       await entry.scrollIntoViewIfNeeded();
       const scroll = await page.evaluate(() => scrollY);
@@ -47,7 +33,7 @@ export function homeDiscoveryTests(): void {
       await page.goBack(); await expect(page.locator(entrySelector(id))).toBeFocused();
       await expect.poll(() => page.evaluate(() => scrollY)).toBeCloseTo(scroll, 0);
       await page.goForward(); await expect(page.locator(surface)).toBeVisible();
-      await activate(id === "forest" ? "[data-td-home]" : id === 'playtest' ? '.step4-playtest header a' : 'a[href="?world=my-game-world"]');
+      await activate(id === "bead" ? ".toolbox-return" : 'a[href="?world=my-game-world"]');
       await expect(page.locator(entrySelector(id))).toBeFocused();
       expect(await page.evaluate(() => document.documentElement.scrollWidth > innerWidth)).toBe(false);
     }
@@ -57,29 +43,15 @@ export function homeDiscoveryTests(): void {
   test("@play-ready @home-discovery keyboard, settings focus and reduced motion", async ({ page }) => {
     await page.goto("/");
     await page.locator('[data-world-settings-open]').focus();
-    await page.keyboard.press("Tab"); await expect(page.locator(entrySelector("forest"))).toBeFocused();
-    await page.keyboard.press("Tab"); await expect(page.locator(entrySelector("math"))).toBeFocused();
-    await page.keyboard.press("Enter"); await expect(page.getByTestId("math-world-map")).toBeVisible();
-    await page.goBack(); await expect(page.locator(entrySelector("math"))).toBeFocused();
+    await page.keyboard.press("Tab"); await expect(page.locator(entrySelector("stroke"))).toBeFocused();
+    await page.keyboard.press("Tab"); await expect(page.locator(entrySelector("english"))).toBeFocused();
+    await page.keyboard.press("Enter"); await expect(page.locator("[data-es-search]")).toBeVisible();
+    await page.goBack(); await expect(page.locator(entrySelector("english"))).toBeFocused();
     await page.locator('[data-world-settings-open]').click();
     await page.locator('[data-world-reduced-motion]').check();
     await expect(page.locator('.my-game-world-mount')).toHaveAttribute("data-reduced-motion", "true");
     await page.keyboard.press("Escape"); await expect(page.locator('[data-world-settings-open]')).toBeFocused();
     expect(JSON.parse((await raw(page))!).settings.reducedMotion).toBe(true);
-  });
-
-  test("@play-ready @home-discovery broken or pending cover images cannot block navigation", async ({ page }) => {
-    await page.route("**/assets/home/*.webp", route => route.abort());
-    await page.goto("/");
-    await page.locator(entrySelector("math")).click();
-    await expect(page.getByTestId("math-world-map")).toBeVisible();
-    await page.unroute("**/assets/home/*.webp");
-    const pending: Array<() => Promise<void>> = [];
-    await page.route("**/assets/home/*.webp", route => { pending.push(() => route.abort().catch(() => {})); });
-    await page.goto("/", { waitUntil: "domcontentloaded" });
-    await page.locator(entrySelector("math")).click();
-    await expect(page.getByTestId("math-world-map")).toBeVisible();
-    for (const release of pending) await release();
   });
 
   for (const original of ['{"version":99,"future":[7]}', '{broken', '{"version":1,"settings":{"muted":false,"reducedMotion":false,"extra":"kept"},"extension":{"kept":7}}']) {
@@ -93,8 +65,8 @@ export function homeDiscoveryTests(): void {
         expect(await raw(page)).toBe(original);
         await expect(page.locator('[data-world-settings-status]')).toContainText("为保护本机记录");
       }
-      await page.keyboard.press("Escape"); await page.locator(entrySelector("forest")).click();
-      await expect(page.getByTestId("hanzi-tower-defense")).toBeVisible();
+      await page.keyboard.press("Escape"); await page.locator(entrySelector("stroke")).click();
+      await expect(page.locator("[data-search]")).toBeVisible();
     });
   }
 
@@ -110,7 +82,7 @@ export function homeDiscoveryTests(): void {
     await expect(page.locator('[data-world-muted]')).not.toBeChecked();
     await expect(page.locator('[data-world-settings-status]')).toContainText("这次没有保存设置");
     await page.keyboard.press("Escape"); await page.locator(entrySelector("treasure")).click();
-    await expect(page.locator('.game-card')).toHaveCount(3);
+    await expect(page.locator('.game-card')).toHaveCount(1);
   });
 
   test("@play-ready @home-discovery cross-page and same-page Vault replacement stop stale writes", async ({ page, context }) => {

@@ -1,5 +1,4 @@
 import type { PageMode } from "./page-mode";
-import { RETIRED_MATH_WORLD_STATION_IDS } from "../games/math-lab/world/world-save";
 import {
   APP_ROUTE_QUERY_MANIFEST,
   PLAY_SURFACE_MANIFEST,
@@ -37,16 +36,13 @@ export function normalizeRetiredLanguageRoute(url: URL): boolean {
   return true;
 }
 
-/** Exact retired entries only; replacement preserves Pages subpaths and history. */
-export function normalizeRetiredMathRoute(url: URL): boolean {
-  const search = url.searchParams;
-  // Language retirement is resolved first; recognized play routes keep precedence over a stale station parameter.
-  if (RETIRED_LANGUAGE_PLAY_IDS.some(id => id === search.get("play")) || APP_ROUTE_QUERY_MANIFEST.some((route) => route.kind === "play" && search.get("play") === route.queryValue)) return false;
-  if (search.get("world") !== "math-world" || search.getAll("station").length !== 1
-    || !RETIRED_MATH_WORLD_STATION_IDS.some((id) => id === search.get("station"))) return false;
-  search.delete("station");
-  search.delete("hub");
-  search.set("notice", "retired-game");
+export function normalizeRemovedToolboxRoute(url: URL): boolean {
+  const retiredPlay = ["hanzi-tower-defense", "hanzi-word-adventure"];
+  if (!["play", "game"].some(key => url.searchParams.getAll(key).some(id => retiredPlay.includes(id)))
+    && !url.searchParams.getAll("world").includes("math-world")
+    && !url.searchParams.getAll("playtest").includes("step4")) return false;
+  url.search = "?world=my-game-world&notice=retired-game";
+  url.hash = "";
   return true;
 }
 

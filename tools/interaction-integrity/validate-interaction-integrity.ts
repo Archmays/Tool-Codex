@@ -21,6 +21,7 @@ function filesUnder(path: string): string[] {
   if (!existsSync(path)) return [];
   const result: string[] = [];
   for (const name of readdirSync(path)) {
+    if (name === "node_modules" || name === "dist" || name === "test-results") continue;
     const child = resolve(path, name);
     if (statSync(child).isDirectory()) result.push(...filesUnder(child));
     else if (child.endsWith(".css")) result.push(child);
@@ -48,9 +49,9 @@ function risks(body: string): RiskType[] {
 
 function surfacesFor(path: string): string[] {
   const ids = (predicate: (productId: string) => boolean): string[] => PLAY_SURFACE_MANIFEST.filter((record) => predicate(record.productId)).map((record) => record.id);
-  if (path.includes("memory-match") || path.includes("memory-card")) return ["test-only:memory-card-mount"];
+  if (path.includes("memory-match") || path.includes("memory-card")) return ["memory-independent"];
   if (["math-lab", "clock-reader", "multiplication-adventure", "make-target", "equation-slider"].some((segment) => path.includes(segment))) {
-    return ids((id) => ["math-lab", "equation-slider"].includes(id));
+    return ["test-only:retained-math-module"];
   }
   if (path.startsWith("apps/") || path.startsWith("packages/") || path.startsWith("src/")) return PLAY_SURFACE_MANIFEST.map((record) => record.id);
   const game = /^games\/([^/]+)/.exec(path)?.[1];
@@ -96,18 +97,8 @@ function exactBlockFor(source: string, selector: string): string {
 
 function validateKnownContracts(entries: readonly RiskEntry[]): string[] {
   const issues: string[] = [];
-  if (JSON.stringify(PLAY_SURFACE_MANIFEST.filter(surface => surface.kind === "station").map(surface => surface.id)) !== JSON.stringify(["math-slider", "math-target"])) issues.push("Math station retirement contract");
+  if (JSON.stringify(PLAY_SURFACE_MANIFEST.filter(surface => surface.kind === "station").map(surface => surface.id)) !== JSON.stringify([])) issues.push("Math station retirement contract");
   if (entries.some((entry) => !entry.testedSurfaceIds.length)) issues.push("Every risk entry must map to at least one browser-tested surface");
-  const css = readFileSync(resolve(ROOT, "games/hanzi-tower-defense/styles.css"), "utf8");
-  for (const selector of [".td-slots", ".td-drops", ".td-synthesis"]) {
-    if (!/pointer-events\s*:\s*none\b/.test(blockFor(css, selector))) issues.push(selector + " must not intercept controls");
-  }
-  const defense = readFileSync(resolve(ROOT, "games/hanzi-tower-defense/index.ts"), "utf8");
-  if (defense.includes('data-td-field-message') || css.includes('.td-field-message')) issues.push("Tower phase status must stay in the HUD instead of covering field glyphs");
-  if (!/pointer-events\s*:\s*auto\b/.test(exactBlockFor(css, ".td-slot"))) issues.push("Tower controls must accept pointer input");
-  const mathCss = readFileSync(resolve(ROOT, "games/math-lab/world/math-map.css"), "utf8");
-  if (!/min-height\s*:\s*48px\b/.test(exactBlockFor(mathCss, ".math-map .math-world-card button"))) issues.push("Math World station entrances must retain the 48px minimum target");
-  if (/transform\s*:/.test(blockFor(mathCss, ".math-map .math-world-card button:hover"))) issues.push("Math World hover/focus feedback must not move the click target");
   const sharedCss = readFileSync(resolve(ROOT, "src/styles.css"), "utf8");
   if (!/min-height\s*:\s*42px\b/.test(exactBlockFor(sharedCss, ".learning-game__pill"))) issues.push("Shared learning-game pills must remain near the 44px target at 42px or larger");
   if (/transform\s*:/.test(exactBlockFor(sharedCss, ".ui-button:hover:not(:disabled)"))) issues.push("Shared button hover feedback must not move the click target");

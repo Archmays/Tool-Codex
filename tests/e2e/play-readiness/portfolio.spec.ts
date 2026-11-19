@@ -1,8 +1,8 @@
+import { activate } from "../step4/input-helpers";
 import { mkdirSync, writeFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { expect, test, type Locator, type Page, type TestInfo } from "@playwright/test";
 import { homeDiscoveryTests } from "./home-discovery-cases";
-import { activate } from "../step4/input-helpers";
 import { createSaveVaultBackup, serializeSaveVaultBackup } from "../../../packages/save-vault";
 
 interface VaultRaceHarness {
@@ -140,7 +140,7 @@ for (const phase of ["read", "checksum"] as const) {
       };
     });
     if (phase === "read") await page.keyboard.press("Escape");
-    else await page.getByRole("button", { name: "回到游戏世界" }).click();
+    else await page.getByRole("button", { name: "返回工具箱" }).click();
     await expect(page.getByRole("dialog")).toHaveCount(0);
     await expect(page.getByRole("button", { name: /家长角/ })).toBeFocused();
     await page.getByRole("button", { name: /家长角/ }).click();
@@ -191,19 +191,14 @@ function expectClean(runtime: RuntimeObservation): void {
 }
 
 async function visiblePrimary(page: Page, kind: string): Promise<Locator> {
-  if (kind === "my-game-world") return page.locator("[data-world-forest-link]");
-  if (kind === "hanzi-tower-defense") return page.locator("[data-td-pause]");
-  if (kind === "hanzi-word-adventure") return page.locator('[data-hway-new]');
-  if (kind === "math-world") return page.locator('[data-station-id="slider"] button');
+  if (kind === "my-game-world") return page.locator("[data-world-bead-link]");
   if (kind === "classic-hub") return page.locator(".game-card__button").first();
   return page.locator("[data-card-id]").first();
 }
 
 const primary: readonly { id: string; route: string; surface: string; gameId?: string }[] = [
-  { id: "hanzi-word-adventure", route: "/?play=hanzi-word-adventure", surface: "[data-testid=hanzi-word-adventure]" },
   { id: "my-game-world", route: "/?world=my-game-world", surface: "[data-testid=my-game-world]" },
-  { id: "hanzi-tower-defense", route: "/?play=hanzi-tower-defense", surface: "[data-testid=hanzi-tower-defense]" },
-  { id: "math-world", route: "/?world=math-world", surface: "[data-testid=math-world-map]" },
+  { id: "memory-independent", route: "/?play=memory-card", surface: ".memory-match" },
   { id: "classic-hub", route: "/?hub=classic&from=world", surface: "[data-testid=classic-hub-from-world]" },
 ] as const;
 
@@ -242,20 +237,18 @@ test("@play-ready primary first actions are visible and child-facing", async ({ 
 test("@play-ready world, support, Classic, back, reload and resume routes stay coherent", async ({ page }) => {
   const runtime = observe(page);
   await page.goto("/?play=hanzi-tower-defense");
-  await expect(page.getByTestId("hanzi-tower-defense")).toBeVisible();
-  await page.locator("[data-td-home]").click();
   await expect(page.getByTestId("my-game-world")).toBeVisible();
-  await page.goto("/?world=math-world&station=slider", { waitUntil: "domcontentloaded" });
-  await expect(page.locator('[data-station-id="slider"] .equation-slider')).toBeVisible();
-  await page.getByRole("button", { name: "← 回城市地图" }).click();
-  await expect(page.getByTestId("math-world-map")).toBeVisible();
+  await expect(page.getByRole("status")).toContainText("已移除");
+  await page.goto("/?play=hanzi-stroke-lab");
+  await page.locator('[href="?world=my-game-world"]').first().click();
+  await expect(page.getByTestId("my-game-world")).toBeVisible();
 
   await page.goto("/?play=hanzi-v2-v1&view=memory&chapter=2&mode=word");
   await expect(page.getByTestId("my-game-world")).toBeVisible();
   await page.reload(); await expect(page.getByTestId("my-game-world")).toBeVisible();
   await page.goto("/?hub=classic&from=world", { waitUntil: "domcontentloaded" });
-  await expect(page.locator(".game-card")).toHaveCount(3);
-  await expect(page.locator('.game-card[data-game-id="memory-card"], .game-card[data-game-id="make-target"]')).toHaveCount(0);
+  await expect(page.locator(".game-card")).toHaveCount(1);
+  await expect(page.locator('.game-card[data-game-id="memory-card"]')).toBeVisible();
   expectClean(runtime);
 });
 
@@ -325,35 +318,25 @@ test("@a11y modal focus, language parts, target sizes and 200% zoom stay operabl
   await settings.click();
   await expect(page.getByRole("dialog")).toBeVisible();
   await page.keyboard.press("Shift+Tab");
-  await expect(page.getByRole("button", { name: "回到游戏世界" })).toBeFocused();
+  await expect(page.getByRole("button", { name: "返回工具箱" })).toBeFocused();
   await page.keyboard.press("Escape");
   await expect(settings).toBeFocused();
   await page.evaluate(() => { document.documentElement.style.zoom = "200%"; });
-  await expect(page.locator("[data-world-forest-link]")).toBeVisible();
+  await expect(page.locator("[data-world-bead-link]")).toBeVisible();
   await expect(page.getByTestId("my-game-world")).toHaveAttribute(
     "data-active-child-products",
-    "hanzi-tower-defense math-lab hanzi-word-adventure"
+    "memory-card"
   );
-  await page.locator("[data-world-forest-link]").focus();
-  await expect(page.locator("[data-world-forest-link]")).toBeFocused();
+  await page.locator("[data-world-bead-link]").focus();
+  await expect(page.locator("[data-world-bead-link]")).toBeFocused();
 
-  await page.goto("/?play=hanzi-tower-defense");
-  await activate(page, "[data-td-restart]", "keyboard");
-  await expect(page.locator("[data-td-restart-dialog]")).toBeVisible(); await page.keyboard.press("Escape");
-  await expect(page.locator("[data-td-restart]")).toBeFocused();
-  await page.goto("/?world=math-world&station=slider", { waitUntil: "domcontentloaded" });
-  await page.getByRole("button", { name: "跳过教程" }).click();
-  await expect(page.getByRole("button", { name: "第 2 列选上方格" })).toBeVisible();
   expectClean(runtime);
 });
 
 test("@long-session 100 cross-surface transitions do not accumulate mounts", async ({ page }, testInfo) => {
   test.skip(testInfo.project.name !== "desktop-1440");
   const runtime = observe(page);
-  const routes = [
-    "/?world=my-game-world", "/?play=hanzi-tower-defense", "/?play=hanzi-tower-defense", "/?play=hanzi-tower-defense",
-    "/?world=math-world", "/?world=math-world&station=slider", "/?world=math-world", "/?world=math-world&station=target", "/?world=math-world&station=target", "/?hub=classic",
-  ];
+  const routes = ["/?world=my-game-world", "/?hub=classic", "/?play=memory-card", "/?play=english-study", "/?play=hanzi-stroke-lab", "/?play=structure-explorer"];
   const samples: number[] = [];
   for (let transition = 0; transition < 100; transition += 1) {
     await page.goto(routes[transition % routes.length], { waitUntil: "domcontentloaded" });
@@ -376,17 +359,14 @@ test("@performance local production performance sample", async ({ page }, testIn
     new PerformanceObserver((list) => { for (const entry of list.getEntries() as (PerformanceEntry & { value: number; hadRecentInput: boolean })[]) if (!entry.hadRecentInput) state.cls += entry.value; }).observe({ type: "layout-shift", buffered: true });
     new PerformanceObserver((list) => { for (const entry of list.getEntries()) state.inp = Math.max(state.inp, entry.duration); }).observe({ type: "event", buffered: true, durationThreshold: 16 } as PerformanceObserverInit & { durationThreshold: number });
   });
-  const routes = ["/?world=my-game-world", "/?play=hanzi-tower-defense", "/?world=math-world", "/?world=math-world&station=target", "/?hub=classic", "/?world=math-world&station=slider"];
+  const routes = ["/?world=my-game-world", "/?play=memory-card", "/?hub=classic"];
   const samples: unknown[] = [];
   for (const route of routes) {
     const start = Date.now();
     await page.goto(route, { waitUntil: "networkidle" });
     const action = route.includes("my-game-world") ? page.getByRole("button", { name: /家长角/ })
-      : route.includes("hanzi-tower-defense") ? page.locator("[data-td-pause]")
-      : route.includes("station=slider") ? page.getByRole("button", { name: "跳过教程" })
-      : route.includes("station=target") ? page.getByRole("button", { name: "1，原牌 1", exact: true })
-      : route.includes("math-world") ? page.locator('[data-station-id="slider"] button')
-      : page.getByRole("button", { name: "数学", exact: true });
+      : route.includes("memory-card") ? page.locator("[data-card-id]").first()
+      : page.locator("[data-subject-filter]").first();
     const interactionStarted = performance.now();
     await action.click();
     const interactionLatencySampleMs = Math.round(performance.now() - interactionStarted);
@@ -399,10 +379,6 @@ test("@performance local production performance sample", async ({ page }, testIn
       const vitals = (window as unknown as { __playReadyVitals: { lcp: number; cls: number; inp: number } }).__playReadyVitals;
       return { route, elapsedToStableMs: elapsed, requests: resources.length, jsCssTransferBytes: [...scripts, ...css].reduce((sum, entry) => sum + entry.transferSize, 0), rasterTransferBytes: rasters.reduce((sum, entry) => sum + entry.transferSize, 0), lcpSampleMs: Math.round(vitals.lcp), clsSample: Number(vitals.cls.toFixed(4)), inpEventTimingSampleMs: Math.round(vitals.inp), primaryActionRoundtripSampleMs: interactionLatencySampleMs, evidence: "LAB_SAMPLED_ONLY_NOT_FIELD_75P" };
     }, { route, elapsed: Date.now() - start, interactionLatencySampleMs }));
-    if (route.includes("station=target")) {
-      // Check the same card's actual selection after capturing the timing sample.
-      await expect(page.locator('[data-operand="left"]')).toHaveAttribute("aria-label", "左操作数：1，原牌 1");
-    }
   }
   mkdirSync(REPORTS, { recursive: true });
   writeFileSync(resolve(REPORTS, `PERFORMANCE_SAMPLE.local-${testInfo.project.name}.json`), `${JSON.stringify({ verdict: "PASS", environment: "local-production-preview", project: testInfo.project.name, samples }, null, 2)}\n`);

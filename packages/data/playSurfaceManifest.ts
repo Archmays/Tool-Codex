@@ -1,4 +1,4 @@
-import { GAME_PORTFOLIO, type TestProfileId } from "./gamePortfolio";
+import type { TestProfileId } from "./gamePortfolio";
 
 export type PlaySurfaceKind =
   | "portfolio-world"
@@ -57,17 +57,12 @@ export const APP_ROUTE_QUERY_MANIFEST = [
   { kind: "play", queryKey: "play", queryValue: "structure-explorer", query: "?play=structure-explorer", defaultScrollPolicy: "document" },
   { kind: "play", queryKey: "play", queryValue: "hanzi-stroke-lab", query: "?play=hanzi-stroke-lab", defaultScrollPolicy: "document" },
   { kind: "play", queryKey: "play", queryValue: "english-study", query: "?play=english-study", defaultScrollPolicy: "document" },
-  { kind: "play", queryKey: "play", queryValue: "hanzi-word-adventure", query: "?play=hanzi-word-adventure", defaultScrollPolicy: "document" },
-  { kind: "play", queryKey: "play", queryValue: "hanzi-tower-defense", query: "?play=hanzi-tower-defense", defaultScrollPolicy: "document" },
   { kind: "play", queryKey: "play", queryValue: "memory-card", query: "?play=memory-card", defaultScrollPolicy: "document" },
   { kind: "classic-hub", queryKey: "hub", queryValue: "classic", query: "?hub=classic", defaultScrollPolicy: "document" },
-  { kind: "world", queryKey: "playtest", queryValue: "step4", query: "?playtest=step4", defaultScrollPolicy: "document" },
-  { kind: "world", queryKey: "world", queryValue: "math-world", query: "?world=math-world", defaultScrollPolicy: "document" },
   { kind: "world", queryKey: "world", queryValue: "my-game-world", query: "?world=my-game-world", defaultScrollPolicy: "document" },
 ] as const satisfies readonly AppRouteQueryRegistration[];
 
 const ALL_INPUTS = ["pointer", "touch", "keyboard"] as const;
-const MATH_HOST_SAVE = ["family-games/math-world/v1"] as const;
 
 type SurfaceInput = Omit<PlaySurfaceRecord, "scrollPolicy" | "hostSaveNamespaces" | "runtimeSaveNamespaces"> & {
   readonly scrollPolicy?: ScrollPolicy;
@@ -80,84 +75,16 @@ function surface(record: SurfaceInput): PlaySurfaceRecord {
   return { scrollPolicy: "document", ...rest, hostSaveNamespaces, runtimeSaveNamespaces };
 }
 
-type ProductSurfaceInput = Omit<
-  SurfaceInput,
-  "productId" | "expectedInputs" | "qualityProfile" | "settingsAvailable" | "destructiveActionAvailable" | "saveNamespaces"
->;
-
-const mathWorld = (record: ProductSurfaceInput): PlaySurfaceRecord => surface({
-  ...record,
-  productId: "math-lab",
-  mountDefinitionId: "math-lab",
-  topLevelProductId: "math-lab",
-  runtimeOwnerDefinitionId: "math-lab",
-  hostWorldId: "math",
-  expectedInputs: ALL_INPUTS,
-  qualityProfile: "a-core-world",
-  settingsAvailable: record.kind === "product-world",
-  destructiveActionAvailable: false,
-  saveNamespaces: MATH_HOST_SAVE,
-  hostSaveNamespaces: MATH_HOST_SAVE,
-  runtimeSaveNamespaces: [],
-});
-
-const MATH_STATION_CONTRACTS = {
-  target: { moduleId: "math-make-target", ownerId: "make-target", qualityProfile: "b-independent-puzzle", runtimeSaves: ["family-games/make-target"] },
-  slider: { moduleId: "math-equation-slider", ownerId: "equation-slider", qualityProfile: "s-equation-release", runtimeSaves: ["family-games/equation-slider"] },
-} as const;
-
-const mathStation = (station: keyof typeof MATH_STATION_CONTRACTS): PlaySurfaceRecord => {
-  const contract = MATH_STATION_CONTRACTS[station];
-  return surface({
-    id: `math-${station}`,
-    title: `数学站点 · ${station}`,
-    route: `?world=math-world&station=${station}`,
-    productId: "math-lab",
-    kind: "station",
-    parentSurfaceId: "math-world",
-    returnRoute: "?world=math-world",
-    primaryActionSelector: "[data-return-map], button:not([disabled]), a",
-    settingsAvailable: false,
-    destructiveActionAvailable: false,
-    saveNamespaces: [...MATH_HOST_SAVE, ...contract.runtimeSaves],
-    hostSaveNamespaces: MATH_HOST_SAVE,
-    runtimeSaveNamespaces: contract.runtimeSaves,
-    mountDefinitionId: contract.ownerId,
-    topLevelProductId: "math-lab",
-    worldModuleId: contract.moduleId,
-    runtimeOwnerDefinitionId: contract.ownerId,
-    hostWorldId: "math",
-    expectedInputs: ALL_INPUTS,
-    qualityProfile: contract.qualityProfile,
-  });
-};
-
 export const PLAY_SURFACE_MANIFEST: readonly PlaySurfaceRecord[] = [
   surface({ id: "structure-explorer", title: "结构探索馆", route: "?play=structure-explorer", productId: "structure-explorer", kind: "support-activity", parentSurfaceId: "my-game-world", returnRoute: "?world=my-game-world", primaryActionSelector: "[data-structure-pencil]", settingsAvailable: false, destructiveActionAvailable: false, saveNamespaces: [], expectedInputs: ALL_INPUTS, qualityProfile: "a-core-world", mountDefinitionId: "structure-explorer", runtimeOwnerDefinitionId: "structure-explorer" }),
   surface({ id: "structure-pencil", title: "铅笔为什么能写字？", route: "?play=structure-explorer&exhibit=pencil", productId: "structure-explorer", kind: "support-activity", parentSurfaceId: "structure-explorer", returnRoute: "?play=structure-explorer", primaryActionSelector: "[data-structure-directory]", settingsAvailable: false, destructiveActionAvailable: false, saveNamespaces: [], expectedInputs: ALL_INPUTS, qualityProfile: "a-core-world", mountDefinitionId: "structure-explorer", runtimeOwnerDefinitionId: "structure-explorer" }),
   surface({ id: "hanzi-stroke-lab", title: "汉字书房", route: "?play=hanzi-stroke-lab", productId: "hanzi-stroke-lab", kind: "support-activity", parentSurfaceId: "my-game-world", returnRoute: "?world=my-game-world", primaryActionSelector: "[data-search] button", settingsAvailable: false, destructiveActionAvailable: false, saveNamespaces: ["family-games/hanzi-stroke-lab/v1"], expectedInputs: ALL_INPUTS, qualityProfile: "a-core-world", mountDefinitionId: "hanzi-stroke-lab", runtimeOwnerDefinitionId: "hanzi-stroke-lab", hostWorldId: "chinese" }),
   surface({ id: "english-study", title: "英语书房", route: "?play=english-study", productId: "english-study", kind: "support-activity", parentSurfaceId: "my-game-world", returnRoute: "?world=my-game-world", primaryActionSelector: "[data-es-search] button", settingsAvailable: false, destructiveActionAvailable: false, saveNamespaces: ["family-games/english-study/v1"], expectedInputs: ALL_INPUTS, qualityProfile: "a-core-world", mountDefinitionId: "english-study", runtimeOwnerDefinitionId: "english-study", hostWorldId: "english" }),
-  surface({ id: 'memory-independent', title: '独立记忆配对', route: '?play=memory-card', productId: 'memory-card', kind: 'support-activity', parentSurfaceId: 'classic-hub', returnRoute: '?hub=classic&from=world', primaryActionSelector: '[data-card-id]:not(:disabled)', settingsAvailable: false, destructiveActionAvailable: false, saveNamespaces: ['family-games/memory-match/v1'], expectedInputs: ALL_INPUTS, qualityProfile: 'c-module', mountDefinitionId: 'memory-card', runtimeOwnerDefinitionId: 'memory-card', compatibilitySurfaceId: 'memory-definition-adapter' }),
-  surface({ id: "step4-playtest", title: "本次试玩", route: "?playtest=step4", productId: "portfolio", kind: "journal", parentSurfaceId: "my-game-world", returnRoute: "?world=my-game-world", primaryActionSelector: "[data-playtest-entry]", settingsAvailable: false, destructiveActionAvailable: false, saveNamespaces: ["family-games/step4-playtest/feedback-v1"], expectedInputs: ALL_INPUTS, qualityProfile: "portfolio-play-ready" }),
-  surface({ id: "hanzi-word-adventure", title: "字间行者 · 借字归途", route: "?play=hanzi-word-adventure", productId: "hanzi-word-adventure", kind: "product-world", parentSurfaceId: "my-game-world", returnRoute: "?world=my-game-world", primaryActionSelector: "[data-hway-new]", settingsAvailable: true, destructiveActionAvailable: true, saveNamespaces: ["family-games/hanzi-word-adventure/companions/v1", "family-games/hanzi-word-adventure/v2", "family-games/hanzi-word-adventure/v1"], expectedInputs: ALL_INPUTS, qualityProfile: "s-hanzi-release", mountDefinitionId: "hanzi-word-adventure", runtimeOwnerDefinitionId: "hanzi-word-adventure", topLevelProductId: "hanzi-word-adventure", hostWorldId: "chinese", primaryEntry: true }),
-  surface({ id: "my-game-world", title: "我的游戏世界", route: "?world=my-game-world", productId: "portfolio", kind: "portfolio-world", returnRoute: "?world=my-game-world", primaryActionSelector: ".world-entry", settingsAvailable: true, destructiveActionAvailable: false, saveNamespaces: ["family-games/my-game-world/v1"], expectedInputs: ALL_INPUTS, qualityProfile: "portfolio-play-ready", scrollPolicy: "document", primaryEntry: true }),
+  surface({ id: 'memory-independent', title: '独立记忆配对', route: '?play=memory-card', productId: 'memory-card', kind: 'support-activity', parentSurfaceId: 'classic-hub', returnRoute: '?hub=classic&from=world', primaryActionSelector: '[data-card-id]:not(:disabled)', settingsAvailable: false, destructiveActionAvailable: false, saveNamespaces: ['family-games/memory-match/v1'], expectedInputs: ALL_INPUTS, qualityProfile: 'c-module', mountDefinitionId: 'memory-card', runtimeOwnerDefinitionId: 'memory-card', compatibilitySurfaceId: 'memory-definition-adapter', topLevelProductId: 'memory-card', primaryEntry: true }),
+  surface({ id: "my-game-world", title: "工具箱", route: "?world=my-game-world", productId: "portfolio", kind: "portfolio-world", returnRoute: "?world=my-game-world", primaryActionSelector: "[data-world-bead-link]", settingsAvailable: true, destructiveActionAvailable: false, saveNamespaces: ["family-games/my-game-world/v1"], expectedInputs: ALL_INPUTS, qualityProfile: "portfolio-play-ready", scrollPolicy: "document", primaryEntry: true }),
   surface({ id: "classic-hub", title: "游戏百宝箱", route: "?hub=classic&from=world", productId: "portfolio", kind: "classic-hub", parentSurfaceId: "my-game-world", returnRoute: "?world=my-game-world", primaryActionSelector: ".game-card__button", settingsAvailable: false, destructiveActionAvailable: false, saveNamespaces: [], expectedInputs: ALL_INPUTS, qualityProfile: "portfolio-play-ready", compatibilitySurfaceId: "classic-hub", primaryEntry: true }),
 
 
-  surface({ id: "hanzi-tower-defense", title: "字阵守城", route: "?play=hanzi-tower-defense", productId: "hanzi-tower-defense", kind: "product-world", parentSurfaceId: "my-game-world", returnRoute: "?world=my-game-world", primaryActionSelector: "[data-td-pause], [data-slot], [data-core]", settingsAvailable: true, destructiveActionAvailable: true, saveNamespaces: ["family-games/hanzi-tower-defense/tactics/v1", "family-games/hanzi-tower-defense/v3", "family-games/hanzi-tower-defense/v2", "family-games/hanzi-tower-defense/v1"], expectedInputs: ALL_INPUTS, qualityProfile: "s-hanzi-release", mountDefinitionId: "hanzi-tower-defense", runtimeOwnerDefinitionId: "hanzi-tower-defense", topLevelProductId: "hanzi-tower-defense", hostWorldId: "chinese", primaryEntry: true }),
-  mathWorld({ id: "math-world", title: "数感实验城", route: "?world=math-world&from=world", kind: "product-world", parentSurfaceId: "my-game-world", returnRoute: "?world=my-game-world", primaryActionSelector: "[data-station-id] button", primaryEntry: true }),
-  ...(["slider", "target"] as const).map(mathStation),
-
-
-  ...([
-    ["classic-defense", "hanzi-tower-defense", "字阵守城", "s-hanzi-release", false],
-    ["classic-adventure", "hanzi-word-adventure", "字间行者", "s-hanzi-release", false],
-    ["classic-math", "math-lab", "数学世界", "a-core-world", false],
-  ] as const).map(([id, productId, title, qualityProfile, primaryEntry]) => {
-    const product = GAME_PORTFOLIO.find((record) => record.id === productId);
-    if (!product) throw new Error(`Classic play surface references unknown product: ${productId}`);
-    return surface({ id, title, route: "?hub=classic&from=world", productId, kind: "classic-entry", parentSurfaceId: "classic-hub", returnRoute: productId === "math-lab" ? "?world=my-game-world" : "?hub=classic&from=world", primaryActionSelector: `[data-game-id="${productId}"] .game-card__button`, settingsAvailable: false, destructiveActionAvailable: false, saveNamespaces: product.saveNamespaces, mountDefinitionId: productId, topLevelProductId: productId, runtimeOwnerDefinitionId: productId, hostWorldId: product.targetWorld === "shared" ? undefined : product.targetWorld, compatibilitySurfaceId: "classic-hub", expectedInputs: ALL_INPUTS, qualityProfile, primaryEntry });
-  }),
 ] as const;
 
 export const PRIMARY_PLAY_SURFACES = PLAY_SURFACE_MANIFEST.filter((record) => record.primaryEntry);

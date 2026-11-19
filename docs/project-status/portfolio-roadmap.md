@@ -1,6 +1,6 @@
-# Game-Codex Portfolio 长期路线
+# Tool-Codex Portfolio 长期路线
 
-> 当前授权的第一步减法见 `docs/portfolio-retirement-step1.md`；下列阶段与发布 tag 保留历史身份，不要求为已退役玩法开发替代游戏。
+> 下列阶段与发布 tag 保留历史身份。
 
 ## 1. Foundation — COMPLETE
 
@@ -8,38 +8,38 @@ Portfolio 真源、分级门禁、安全维护事务、CI 与 Pages 组合验证
 
 ## 2. Math World — COMPLETE
 
-历史 Math World 发布完成；当前仅保留算式滑轨、目标工坊，退役处置见 docs/portfolio-retirement-step1.md。
+历史 Math World 发布完成；数学世界及站点已从工具箱运行面移除。
 
 - 发布 tag：`math-world-v1.0.0`
-- 当前 route：`?world=math-world`
+- 当时的 route：`?world=math-world`
 
 ## 3. Chinese Consolidation — COMPLETE
 
 历史收拢已完成；GAME-CODEX-STEP1 已退役旧语言运行产品，原存档保留。
 
 - 发布 tag：`chinese-consolidation-v1.0.0`
-- 当前 route：`?play=hanzi-magic-complete`
+- 当时的 route：`?play=hanzi-magic-complete`
 
 ## 4. English V2 — COMPLETE
 
 历史英语产品已于 GAME-CODEX-STEP1 退役，原存档保留。
 
 - 发布 tag：`english-world-v2.0.0`
-- 当前 route：`?world=english-world`
+- 当时的 route：`?world=english-world`
 
 ## 5. Play Readiness — COMPLETE
 
 首用、反馈、返回、存档保险箱、无障碍、性能与长期家庭使用准备。
 
 - 发布 tag：`game-codex-play-ready-v1.0.0`
-- 当前 route：`?world=my-game-world`
+- 当时的 route：`?world=my-game-world`
 
 ## 6. Natural-use Observation — ACTIVE
 
 普通家庭使用已开始；Observation Kit 保持家长主动、本机最小化、默认零记录，只在自然出现的真实证据需要时使用。
 
 - 发布 tag：`game-codex-observation-kit-v1.0.0`
-- 当前 route：`?world=my-game-world&parent=observation`
+- 当时的 route：`?world=my-game-world&parent=observation`
 
 ## 明确授权的有界开发周期
 

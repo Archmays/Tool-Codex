@@ -18,7 +18,7 @@ if ($existingServer) {
   if (-not $existingServer.Record) {
     Save-MyGameWorldServerRecord -RepositoryRoot $repositoryRoot -Paths $paths -Server $existingServer -StartedByFamilyLauncher $false
   }
-  Write-Host "Reusing the exact Game-Codex Vite server on 127.0.0.1:5175."
+  Write-Host "Reusing the exact Tool-Codex Vite server on 127.0.0.1:5175."
 } else {
   New-Item -ItemType Directory -Path $paths.TempDirectory -Force | Out-Null
   Write-MyGameWorldUtf8NoBom -Path $paths.StdoutPath -Contents ""
@@ -43,13 +43,13 @@ if ($existingServer) {
     if (-not $process.HasExited) { Stop-Process -Id $process.Id -Force -ErrorAction SilentlyContinue }
     throw
   }
-  Write-Host "Started the exact Game-Codex Vite server on 127.0.0.1:5175."
+  Write-Host "Started the exact Tool-Codex Vite server on 127.0.0.1:5175."
 }
 
 Wait-MyGameWorldServer
 if (-not $NoBrowser) {
   Start-Process $script:MyGameWorldUrl
-  Write-Host "Opened My Game World in the default browser."
+  Write-Host "Opened the toolbox in the default browser."
 } else {
   Write-Host "NoBrowser mode: the server is ready, but no browser was opened."
 }

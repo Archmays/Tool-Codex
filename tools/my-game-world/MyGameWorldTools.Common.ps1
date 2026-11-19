@@ -10,10 +10,10 @@ function Get-MyGameWorldRepositoryRoot {
 
   $candidate = [System.IO.Path]::GetFullPath((Join-Path $ScriptDirectory "..\.."))
   if (-not (Test-Path -LiteralPath (Join-Path $candidate "package.json") -PathType Leaf)) {
-    throw "Game-Codex repository root was not found from $ScriptDirectory."
+    throw "Tool-Codex repository root was not found from $ScriptDirectory."
   }
   if (-not (Test-Path -LiteralPath (Join-Path $candidate "src\main.ts") -PathType Leaf)) {
-    throw "The resolved directory is not the expected Game-Codex repository: $candidate"
+    throw "The resolved directory is not the expected Tool-Codex repository: $candidate"
   }
   return $candidate.TrimEnd([System.IO.Path]::DirectorySeparatorChar)
 }
@@ -155,7 +155,7 @@ function Get-MyGameWorldValidatedServer {
     throw "The process listening on 127.0.0.1:5175 could not be inspected. Nothing was reused or stopped."
   }
   if (-not (Test-MyGameWorldCommandIdentity -CommandLine $details.CommandLine -ViteCliPath $Paths.ViteCliPath -RepositoryRoot $RepositoryRoot)) {
-    throw "Port 5175 is occupied by a process that is not the exact Game-Codex Vite server. Nothing was reused or stopped."
+    throw "Port 5175 is occupied by a process that is not the exact Tool-Codex Vite server. Nothing was reused or stopped."
   }
 
   $record = $null

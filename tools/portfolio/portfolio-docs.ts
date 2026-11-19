@@ -56,11 +56,11 @@ export function renderReadmePortfolio(catalog: readonly GameCatalogMetadata[]): 
     "| --- | --- | --- | --- | --- | --- | --- |",
     ...rows,
     "",
-    `当前两个产品领域（${PRIMARY_WORLDS.join(" / ")}）包含 ${WORLD_MODULES.length} 个显式世界模块；${COMPATIBILITY_SURFACES.length} 个兼容表面与 ${SHARED_ENGINES.length} 个共享引擎独立登记。算式滑轨只作为数学世界旗舰模块进入；目标工坊与记忆配对也不再占用重复 Classic 卡，数学模块、独立配对引擎与原存档保留；旧语言产品已实际退役，旧链接仅返回首页。`,
+    `工具箱独立提供拼豆图纸生成器，游戏百宝箱提供记忆配对。保留 ${COMPATIBILITY_SURFACES.length} 个兼容表面与 ${SHARED_ENGINES.length} 个共享引擎。`,
     "",
     `项目阶段：Foundation、Math World、Chinese Consolidation、English V2 与 Play Readiness 均为 COMPLETE；Natural-use Observation 为 ACTIVE；家庭稳定基线已冻结在 \`${PROJECT_LIFECYCLE_TERMINAL_TRUTH.familyStableBaselineTag}\`；下一自动阶段为 \`${NEXT_PROJECT_PHASE ?? "NONE"}\`。`,
     `历史周期 \`${currentCycle.id}\` 是用户明确授权、由发布 tag 目标闭合的独立 bounded development cycle；源码不提前冒充外部发布完成。它不关闭 Natural-use Observation，也不创建自动后续任务。`,
-    "当前减法：`docs/portfolio-retirement-step1.md`；时钟、阵列、旧实验室已退役，旧链接回数学世界，全部旧存档键保留。",
+    "数学世界、字阵守城和字间行者已移除。旧链接回到工具箱，旧存档键保留。",
     "家庭使用入口、可选 Observation Kit 与重新开发边界见 `docs/project-status/natural-use.md`。",
     README_PORTFOLIO_END,
   ].join("\n");
@@ -83,11 +83,11 @@ export function renderPortfolioStatus(catalog: readonly GameCatalogMetadata[]): 
     return `| ${cell(game.title)} | \`${record.id}\` | ${WORLD_LABELS[record.targetWorld]} | ${DEFINITION_ROLE_LABELS[record.definitionRole]} | ${PRODUCT_ROLE_LABELS[record.productRole]} | ${record.qualityTier} | \`${record.lifecycleStatus}\` | ${record.activeChildProduct ? "是" : "否"} | ${record.classicCardVisible ? "是" : "否"} | ${cell(record.canonicalRoute ?? "无儿童侧独立 route")} | ${record.saveNamespaces.map((namespace) => `\`${namespace}\``).join("<br>")} |`;
   });
   return [
-    "# Game-Codex Portfolio 状态",
+    "# Tool-Codex Portfolio 状态",
     "",
     "> 本页由 `packages/data/gamePortfolio.ts` 确定性生成，是跨游戏生命周期、世界归属、质量等级、可见性和测试配置的唯一当前状态页。游戏自己的儿童文案仍由各 `GameDefinition` 管理。",
     "",
-    "当前授权及处置：`docs/portfolio-retirement-step1.md`。只完成第一步产品减法，不自动启动玩法重做。",
+    "当前工具箱提供独立工具和记忆配对；已移除的游戏通过 Git 历史查阅。",
     "",
     "## Foundation 基线",
     "",
@@ -100,7 +100,6 @@ export function renderPortfolioStatus(catalog: readonly GameCatalogMetadata[]): 
     `- Compatibility surfaces：\`${COMPATIBILITY_SURFACES.length}\``,
     `- Shared engines：\`${SHARED_ENGINES.length}\``,
     `- 经典大厅：\`${classicCount}\` 活跃产品入口`,
-    "- 数学世界：`slider / target` 两个自由开放站点，slider 排前",
     "- 历史治理：本阶段不重写 Git 历史、不强推、不移动或覆盖 tag",
     `- 家庭稳定基线：\`${PROJECT_LIFECYCLE_TERMINAL_TRUTH.familyStableBaseline}\`（\`${PROJECT_LIFECYCLE_TERMINAL_TRUTH.familyStableBaselineTag}\` / \`${PROJECT_LIFECYCLE_TERMINAL_TRUTH.familyStableBaselineCommit}\`）`,
     "- 真人儿童验证：`NO_BY_USER_DIRECTION_AND_NOT_A_DEVELOPMENT_GATE`",
@@ -169,16 +168,16 @@ export function renderPortfolioStatus(catalog: readonly GameCatalogMetadata[]): 
 
 export function renderPortfolioRoadmap(): string {
   return [
-    "# Game-Codex Portfolio 长期路线",
+    "# Tool-Codex Portfolio 长期路线",
     "",
-    "> 当前授权的第一步减法见 `docs/portfolio-retirement-step1.md`；下列阶段与发布 tag 保留历史身份，不要求为已退役玩法开发替代游戏。",
+    "> 下列阶段与发布 tag 保留历史身份。",
     "",
     ...PROJECT_PHASES.flatMap((phase, index) => [
       `## ${index + 1}. ${phase.title} — ${phase.status.toUpperCase()}`,
       "",
       phase.summary,
       ...(phase.releaseTag ? ["", `- 发布 tag：\`${phase.releaseTag}\``] : []),
-      ...(phase.canonicalRoute ? [`- 当前 route：\`${phase.canonicalRoute}\``] : []),
+      ...(phase.canonicalRoute ? [`- 当时的 route：\`${phase.canonicalRoute}\``] : []),
       "",
     ]),
     "## 明确授权的有界开发周期",

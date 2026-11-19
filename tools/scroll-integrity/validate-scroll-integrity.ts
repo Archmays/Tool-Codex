@@ -46,6 +46,7 @@ function filesUnder(path: string): string[] {
   if (!existsSync(path)) return [];
   const result: string[] = [];
   for (const name of readdirSync(path)) {
+    if (name === "node_modules" || name === "dist" || name === "test-results") continue;
     const child = resolve(path, name);
     if (statSync(child).isDirectory()) result.push(...filesUnder(child));
     else if (/\.(?:css|html|js|ts|tsx)$/.test(child)) result.push(child);
@@ -75,7 +76,7 @@ function option(name: string): string | undefined {
 const entries = riskInventory();
 const issues: string[] = [];
 const policyCounts = Object.fromEntries(["document", "internal", "locked"].map((policy) => [policy, PLAY_SURFACE_MANIFEST.filter((surface) => surface.scrollPolicy === policy).length]));
-if (JSON.stringify(PLAY_SURFACE_MANIFEST.filter(surface => surface.kind === "station").map(surface => surface.id)) !== JSON.stringify(["math-slider", "math-target"])) issues.push("Math station retirement contract");
+if (JSON.stringify(PLAY_SURFACE_MANIFEST.filter(surface => surface.kind === "station").map(surface => surface.id)) !== JSON.stringify([])) issues.push("Math station retirement contract");
 if (policyCounts.document !== PLAY_SURFACE_MANIFEST.length || policyCounts.internal !== 0 || policyCounts.locked !== 0) issues.push(`Unexpected scroll classification: ${JSON.stringify(policyCounts)}`);
 if (PLAY_SURFACE_MANIFEST.find(surface => surface.id === "my-game-world")?.scrollPolicy !== "document") issues.push("Home world entries must use natural document scrolling");
 for (const surface of PLAY_SURFACE_MANIFEST) {

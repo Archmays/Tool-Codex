@@ -44,9 +44,9 @@ describe("portfolio play-readiness contracts", () => {
   });
 
   it("covers every primary first-use surface and keeps Classic aligned to the two current products", () => {
-    expect(PLAY_SURFACE_MANIFEST.filter(surface => surface.kind === "station").map(surface => surface.id)).toEqual(["math-slider", "math-target"]);
-    expect(PRIMARY_PLAY_SURFACES).toHaveLength(5);
-    expect(PLAY_SURFACE_MANIFEST.filter((surface) => surface.kind === "classic-entry")).toHaveLength(3);
+    expect(PLAY_SURFACE_MANIFEST.filter(surface => surface.kind === "station").map(surface => surface.id)).toEqual([]);
+    expect(PRIMARY_PLAY_SURFACES).toHaveLength(3);
+    expect(PLAY_SURFACE_MANIFEST.filter((surface) => surface.kind === "classic-entry")).toHaveLength(0);
     expect(PLAY_SURFACE_MANIFEST.every((surface) => surface.expectedInputs.includes("keyboard"))).toBe(true);
   });
 
@@ -63,7 +63,6 @@ describe("portfolio play-readiness contracts", () => {
   it("keeps top and Classic child surfaces free of adult catalog metadata", () => {
     const top = readFileSync("apps/my-game-world/index.ts", "utf8");
     const classic = readFileSync("apps/hub/index.ts", "utf8");
-    expect(top).toContain('aria-label="选择游戏世界"');
     expect(top).toContain('class="world-more" aria-label="游戏列表"');
     expect(top).not.toContain("夜光墨林");
     for (const forbidden of ["recommendedAge", "learningGoal", "qualityTier", "statusBadge"]) expect(classic).not.toContain(forbidden);
@@ -71,12 +70,8 @@ describe("portfolio play-readiness contracts", () => {
 
   it("uses semantic loading recovery and language/focus affordances", () => {
     const main = readFileSync("src/main.ts", "utf8");
-    const defense = readFileSync("games/hanzi-tower-defense/ui/template.ts", "utf8");
-    const defenseInput = readFileSync("games/hanzi-tower-defense/ui/input.ts", "utf8");
     expect(main).toContain("renderRouteLoading");
     expect(main).toContain("renderRouteError");
     expect(main).not.toContain("error.message");
-    expect(defense).toContain("data-td-pause");
-    expect(defenseInput).toContain('event.key === "Escape"');
   });
 });

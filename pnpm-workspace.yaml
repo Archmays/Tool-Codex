@@ -1,2 +1,6 @@
+packages:
+  - apps/bead-generator
+
 allowBuilds:
   esbuild: true
+  core-js: false

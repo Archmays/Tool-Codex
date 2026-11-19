@@ -3,7 +3,6 @@ import { resolve } from "node:path";
 import { expect, test, type Locator, type Page } from "@playwright/test";
 import { PLAY_SURFACE_MANIFEST, type PlaySurfaceRecord } from "../../../packages/data/playSurfaceManifest";
 import { activateAndExpectStateChange, expectHitTarget } from "../helpers/hit-target";
-import { revealControl } from "../step4/input-helpers";
 
 const REPORTS = resolve(process.env.GAME_CODEX_EVIDENCE_ROOT ?? "test-results", "interaction-integrity/reports");
 const RETURN_WORDS = /^(?:←\s*)?(?:回|返回|退出)|回到|回我的|回游戏|回城市|回地图|返回/;
@@ -129,7 +128,7 @@ test("@hittest @representative @portfolio all manifest surfaces expose topmost c
       }
       const primary = nonReturn[0] ?? actions[0];
       const primaryLabel = await label(primary);
-      await expectHitTarget(primary, { minimumRatio: 1, minimumSize: record.id.startsWith("math-") ? 42 : 44 });
+      await expectHitTarget(primary, { minimumRatio: 1, minimumSize: 44 });
       await primary.click({ trial: true });
       await activateAndExpectStateChange(page, primary, "pointer");
       await expect.poll(async () => {
@@ -181,7 +180,7 @@ test("@hittest @representative modal close, fixed-layer, and destructive cancel 
   const settings = page.getByRole("button", { name: /家长角/ });
   await expectHitTarget(settings, { minimumRatio: 1, minimumSize: 44 });
   await settings.click();
-  const closeWorld = page.getByRole("button", { name: "回到游戏世界" });
+  const closeWorld = page.getByRole("button", { name: "返回工具箱" });
   await expectHitTarget(closeWorld, { minimumRatio: 1, minimumSize: 44 });
   const vaultOpen = page.getByRole("button", { name: "打开游戏进度保险箱" });
   await expectHitTarget(vaultOpen, { minimumRatio: 1, minimumSize: 44 });
@@ -194,11 +193,6 @@ test("@hittest @representative modal close, fixed-layer, and destructive cancel 
   await closeWorld.click();
   await expect(settings).toBeFocused();
 
-  await page.goto("/?play=hanzi-tower-defense");
-  await revealControl(page, "[data-td-restart]", "mouse");
-  const restart = page.locator("[data-td-restart]"); await expectHitTarget(restart, { minimumRatio: 1, minimumSize: 44 }); await restart.click();
-  const cancel = page.locator("[data-td-cancel-restart]"); await expectHitTarget(cancel, { minimumRatio: 1, minimumSize: 44 }); await cancel.click();
-  await expect(page.locator("[data-td-restart-dialog]")).not.toBeVisible();
   await page.goto("/?world=my-game-world&parent=observation", { waitUntil: "domcontentloaded" });
   await expect(page.getByTestId("observation-notebook")).toBeVisible();
   const destructive = page.locator("[data-observation-delete-all]");
@@ -220,21 +214,6 @@ test("@hittest @full 100 transitions leave no stale overlay before primary hit t
     await page.goto(`/${routes[transition % routes.length]}`, { waitUntil: "domcontentloaded" });
     const actions = await expect.poll(async () => (await visibleEnabled(page.locator(record.primaryActionSelector))).length).toBeGreaterThan(0).then(() => visibleEnabled(page.locator(record.primaryActionSelector)));
     const evidence = await expectHitTarget(actions[0], { minimumRatio: 1, minimumSize: 24 });
-    if (record.id === "hanzi-word-adventure") {
-      // This documented entry dialog is the current surface, not an orphan overlay.
-      // Check it, enter through real controls without resetting a slot, then require
-      // the same zero-overlay invariant as every other route in this stress test.
-      const entry = page.getByRole("dialog", { name: "选择新游戏或继续游戏" });
-      await expect(entry).toBeVisible();
-      await expect(page.locator(".world-modal:visible, [aria-modal=true]:visible")).toHaveCount(1);
-      await expect(actions[0]).toHaveAttribute("data-hway-new", "");
-      await entry.locator("[data-hway-continue]").click();
-      const chapter = entry.locator('[data-hway-chapter="homeward"]');
-      if (!await chapter.isEnabled()) await entry.locator("[data-hway-new]").click();
-      await chapter.click();
-      await expect(page.locator("[data-hway-grid]")).toBeFocused();
-      await expectHitTarget(page.locator('[data-hway-move="right"]'), { minimumRatio: 1, minimumSize: 44 });
-    }
     expect(await page.locator("#app > *").count()).toBe(1);
     expect(await page.locator(".world-modal:visible, [aria-modal=true]:visible").count()).toBe(0);
     expect(await page.locator("canvas").count()).toBeLessThanOrEqual(1);

@@ -39,7 +39,7 @@ async function observationCount(page: Page): Promise<number> {
 
 test("@privacy ordinary play, ten virtual minutes, open/close, manual selection and refresh record nothing", async ({ page }) => {
   const runtime = observe(page);
-  await page.goto("/?world=math-world", { waitUntil: "domcontentloaded" });
+  await page.goto("/?play=memory-card", { waitUntil: "domcontentloaded" });
   await page.evaluate((key) => { localStorage.clear(); localStorage.removeItem(key); }, OBSERVATION_STORAGE_KEY);
   await page.clock.install({ time: new Date("2026-08-22T10:00:00") });
   await page.clock.fastForward("10:00");
@@ -49,7 +49,7 @@ test("@privacy ordinary play, ten virtual minutes, open/close, manual selection 
   await expect(page.getByTestId("observation-notebook")).toBeVisible();
   expect(await observationCount(page)).toBe(0);
   expect(await page.evaluate((key) => localStorage.getItem(key), OBSERVATION_STORAGE_KEY)).toBeNull();
-  await page.locator("[data-observation-surface]").selectOption("math-world");
+  await page.locator("[data-observation-surface]").selectOption("memory-independent");
   await page.getByRole("checkbox", { name: "明显停顿或寻找操作" }).check();
   expect(await page.evaluate((key) => localStorage.getItem(key), OBSERVATION_STORAGE_KEY)).toBeNull();
   await page.keyboard.press("Escape");
@@ -75,7 +75,7 @@ test("@natural-use parent creates, lists, previews, exports and purpose-separate
   const notebook = page.getByTestId("observation-notebook");
   await expect(notebook).toBeVisible();
   expect(await observationCount(page)).toBe(0);
-  await notebook.locator("[data-observation-surface]").selectOption("math-world");
+  await notebook.locator("[data-observation-surface]").selectOption("memory-independent");
   await notebook.getByRole("checkbox", { name: "明显停顿或寻找操作" }).check();
   await notebook.getByRole("radio", { name: "一次轻提示" }).check();
   await notebook.getByRole("radio", { name: "继续玩" }).check();
@@ -112,7 +112,7 @@ test("@natural-use parent creates, lists, previews, exports and purpose-separate
   const observationPath = await observationDownload.path();
   const exported = JSON.parse(await readFile(observationPath!, "utf8"));
   expect(exported.recordCount).toBe(1);
-  expect(exported.records[0].surfaceId).toBe("math-world");
+  expect(exported.records[0].surfaceId).toBe("memory-independent");
   expect(exported.records[0]).not.toHaveProperty("routeHistory");
   expect(JSON.stringify(exported)).not.toContain("family-games/math-world/v1");
   expect(JSON.stringify(exported)).not.toContain("other-localhost-app/save");
@@ -134,7 +134,7 @@ test("@natural-use parent creates, lists, previews, exports and purpose-separate
   expect(await page.evaluate(() => localStorage.getItem("family-games/math-world/v1"))).toContain("preserve");
 
   await notebook.getByRole("button", { name: "记录一条" }).click();
-  await notebook.locator("[data-observation-surface]").selectOption("hanzi-tower-defense");
+  await notebook.locator("[data-observation-surface]").selectOption("my-game-world");
   await notebook.getByRole("checkbox", { name: "自主开始" }).check();
   await notebook.getByRole("button", { name: "保存这条观察" }).click();
   expect(await observationCount(page)).toBe(1);
@@ -151,7 +151,7 @@ test("@security 240 Unicode characters save, 241 reject, keyboard, 200% zoom and
   const runtime = observe(page);
   await page.goto("/?world=my-game-world&parent=observation", { waitUntil: "domcontentloaded" });
   const notebook = page.getByTestId("observation-notebook");
-  await notebook.locator("[data-observation-surface]").selectOption("hanzi-tower-defense");
+  await notebook.locator("[data-observation-surface]").selectOption("my-game-world");
   await notebook.getByRole("checkbox", { name: "很快找到主要操作" }).check();
   await notebook.locator("[data-observation-note]").fill("🙂".repeat(240));
   await expect(notebook.locator("[data-observation-note-count]")).toHaveText("240 / 240");

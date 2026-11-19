@@ -1,21 +1,20 @@
-# Game-Codex Portfolio 状态
+# Tool-Codex Portfolio 状态
 
 > 本页由 `packages/data/gamePortfolio.ts` 确定性生成，是跨游戏生命周期、世界归属、质量等级、可见性和测试配置的唯一当前状态页。游戏自己的儿童文案仍由各 `GameDefinition` 管理。
 
-当前授权及处置：`docs/portfolio-retirement-step1.md`。只完成第一步产品减法，不自动启动玩法重做。
+当前工具箱提供独立工具和记忆配对；已移除的游戏通过 Git 历史查阅。
 
 ## Foundation 基线
 
 - 实际起点：`12c86dc22b7219a23baeb26efbe7eab9fb0a2da2`
 - 起点 tracked 文件：`708232522` bytes
-- Mount definitions：`9` 保留
+- Mount definitions：`4` 保留
 - Independent tools：`3`
-- Active child products：`3`
-- World modules：`2`
+- Active child products：`1`
+- World modules：`0`
 - Compatibility surfaces：`2`
 - Shared engines：`2`
-- 经典大厅：`3` 活跃产品入口
-- 数学世界：`slider / target` 两个自由开放站点，slider 排前
+- 经典大厅：`1` 活跃产品入口
 - 历史治理：本阶段不重写 Git 历史、不强推、不移动或覆盖 tag
 - 家庭稳定基线：`FROZEN`（`game-codex-family-stable-v1.0.0` / `8b890ff14880bcb576dd1ced37e14e6e3df28af1`）
 - 真人儿童验证：`NO_BY_USER_DIRECTION_AND_NOT_A_DEVELOPMENT_GATE`
@@ -27,22 +26,15 @@
 | 结构探索馆 | `structure-explorer` | 共享模块 | 独立查阅工具 | 独立工具 | A | `active` | 否 | 否 | ?play=structure-explorer |  |
 | 汉字书房 | `hanzi-stroke-lab` | 中文世界 | 独立查阅工具 | 独立工具 | A | `active` | 否 | 否 | ?play=hanzi-stroke-lab | `family-games/hanzi-stroke-lab/v1` |
 | 英语书房 | `english-study` | 英语世界 | 独立查阅工具 | 独立工具 | A | `active` | 否 | 否 | ?play=english-study | `family-games/english-study/v1` |
-| 字间行者 | `hanzi-word-adventure` | 中文世界 | 活跃儿童产品 | 独立谜题 | S | `active` | 是 | 是 | ?play=hanzi-word-adventure | `family-games/hanzi-word-adventure/companions/v1`<br>`family-games/hanzi-word-adventure/v2`<br>`family-games/hanzi-word-adventure/v1` |
-| 字阵守城 | `hanzi-tower-defense` | 中文世界 | 活跃儿童产品 | 旗舰 | S | `active` | 是 | 是 | ?play=hanzi-tower-defense | `family-games/hanzi-tower-defense/tactics/v1`<br>`family-games/hanzi-tower-defense/v3`<br>`family-games/hanzi-tower-defense/v2`<br>`family-games/hanzi-tower-defense/v1` |
-| 算式滑轨 | `equation-slider` | 数学世界 | 世界模块挂载 | 旗舰模块 | S | `active-module` | 否 | 否 | ?world=math-world&station=slider | `family-games/equation-slider` |
-| 数学世界 | `math-lab` | 数学世界 | 活跃儿童产品 | 核心世界 | A | `active` | 是 | 是 | ?world=math-world&from=hub | `family-games/math-world/v1` |
-| 目标工坊 | `make-target` | 数学世界 | 世界模块挂载 | 独立谜题 | B | `active-module` | 否 | 否 | ?world=math-world&station=target | `family-games/make-target` |
-| 记忆配对 | `memory-card` | 共享模块 | 兼容适配定义 | 模块 | C | `compatibility-only` | 否 | 否 | 无儿童侧独立 route | `family-games/memory-card`<br>`family-games/memory-match/v1` |
+| 记忆配对 | `memory-card` | 共享模块 | 活跃儿童产品 | 独立谜题 | C | `compatibility-only` | 是 | 是 | 无儿童侧独立 route | `family-games/memory-card`<br>`family-games/memory-match/v1` |
 
 ## 分层组合真源
 
-- 活跃儿童产品：`hanzi-tower-defense` / `math-lab` / `hanzi-word-adventure`
-- Classic 投影：`hanzi-tower-defense` / `math-lab` / `hanzi-word-adventure`
+- 活跃儿童产品：`memory-card`
+- Classic 投影：`memory-card`
 
 | 世界模块 | Host 世界 / 产品 | Mount 定义 | Runtime owner | 质量档 | Runtime save | 规范 route | 引擎 |
 | --- | --- | --- | --- | --- | --- | --- | --- |
-| 算式滑轨站 | 数学世界<br>`math-lab` | `equation-slider` | `equation-slider` | `s-equation-release` | `family-games/equation-slider` | ?world=math-world&station=slider | game-owned |
-| 目标工坊 | 数学世界<br>`math-lab` | `make-target` | `make-target` | `b-independent-puzzle` | `family-games/make-target` | ?world=math-world&station=target | game-owned |
 
 | 兼容表面 | 用途 | route |
 | --- | --- | --- |
@@ -52,14 +44,14 @@
 | 共享引擎 | 路径 | 消费者 |
 | --- | --- | --- |
 | `memory-match` | `packages/activity-engines/memory-match` | `memory-card` |
-| `game-core-local-storage` | `packages/game-core` | `equation-slider`<br>`math-lab`<br>`make-target`<br>`memory-card` |
+| `game-core-local-storage` | `packages/game-core` | `memory-card` |
 
 ## 项目阶段真源
 
 | 阶段 | 状态 | 发布 tag / route | 摘要 |
 | --- | --- | --- | --- |
 | Foundation | `COMPLETE` | — | Portfolio 真源、分级门禁、安全维护事务、CI 与 Pages 组合验证。 |
-| Math World | `COMPLETE` | `math-world-v1.0.0`<br>`?world=math-world` | 历史 Math World 发布完成；当前仅保留算式滑轨、目标工坊，退役处置见 docs/portfolio-retirement-step1.md。 |
+| Math World | `COMPLETE` | `math-world-v1.0.0`<br>`?world=math-world` | 历史 Math World 发布完成；数学世界及站点已从工具箱运行面移除。 |
 | Chinese Consolidation | `COMPLETE` | `chinese-consolidation-v1.0.0`<br>`?play=hanzi-magic-complete` | 历史收拢已完成；GAME-CODEX-STEP1 已退役旧语言运行产品，原存档保留。 |
 | English V2 | `COMPLETE` | `english-world-v2.0.0`<br>`?world=english-world` | 历史英语产品已于 GAME-CODEX-STEP1 退役，原存档保留。 |
 | Play Readiness | `COMPLETE` | `game-codex-play-ready-v1.0.0`<br>`?world=my-game-world` | 首用、反馈、返回、存档保险箱、无障碍、性能与长期家庭使用准备。 |

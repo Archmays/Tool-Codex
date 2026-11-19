@@ -19,6 +19,11 @@ import {
   type ParentHelp,
 } from "./types";
 
+const HISTORICAL_SURFACE_IDS = new Set([
+  "step4-playtest", "hanzi-word-adventure", "hanzi-tower-defense", "math-world",
+  "math-slider", "math-target", "classic-defense", "classic-adventure", "classic-math",
+]);
+
 const RECORD_FIELDS = new Set(["id", "schemaVersion", "dateLocal", "buildCommit", "surfaceId", "moment", "tags", "parentHelp", "outcome", "note"]);
 const BUNDLE_FIELDS = new Set(["format", "version", "exportedAt", "projectBuildCommit", "retentionDays", "maxRecords", "recordCount", "records", "integrity"]);
 const INTEGRITY_FIELDS = new Set(["algorithm", "recordsSha256"]);
@@ -107,7 +112,7 @@ export function validateObservationRecord(value: unknown): NaturalUseObservation
   const dateLocal = typeof value.dateLocal === "string" ? value.dateLocal : "";
   dateOnlyEpochDay(dateLocal);
   if (!validBuildCommit(value.buildCommit)) throw new ObservationValidationError("Observation build commit is invalid.");
-  if (typeof value.surfaceId !== "string" || !PLAY_SURFACE_BY_ID.has(value.surfaceId)) throw new ObservationValidationError("Observation surface is not in PLAY_SURFACE_MANIFEST.");
+  if (typeof value.surfaceId !== "string" || (!PLAY_SURFACE_BY_ID.has(value.surfaceId) && !HISTORICAL_SURFACE_IDS.has(value.surfaceId))) throw new ObservationValidationError("Observation surface is not in PLAY_SURFACE_MANIFEST.");
   if (!oneOf(value.moment, OBSERVATION_MOMENTS)) throw new ObservationValidationError("Observation moment is invalid.");
   if (!Array.isArray(value.tags) || value.tags.length < 1 || value.tags.length > 3) throw new ObservationValidationError("Choose between one and three observable tags.");
   if (!value.tags.every((tag): tag is ObservationTag => oneOf(tag, OBSERVATION_TAGS))) throw new ObservationValidationError("Observation contains an unsupported tag.");
@@ -133,6 +138,7 @@ export function createObservationRecord(
   draft: NaturalUseObservationDraft,
   options: { readonly id?: string; readonly today?: string } = {},
 ): NaturalUseObservationRecord {
+  if (!PLAY_SURFACE_BY_ID.has(draft.surfaceId)) throw new ObservationValidationError("请选择工具箱中的当前入口。");
   const normalizedNote = draft.note === undefined ? undefined : normalizeObservationNote(draft.note);
   if (normalizedNote && noteCharacterCount(normalizedNote) > OBSERVATION_NOTE_MAX_CHARS) {
     throw new ObservationValidationError(`观察备注最多 ${OBSERVATION_NOTE_MAX_CHARS} 个字符。`);
