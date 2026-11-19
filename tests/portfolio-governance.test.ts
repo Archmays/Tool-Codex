@@ -149,6 +149,26 @@ describe("game portfolio governance", () => {
     expect(affectedGateCommands(["<unknown>"]).at(-1)?.label).toBe("all-game portfolio smoke");
   });
 
+  it("selects full tower battles for tower changes and runtime dependencies", () => {
+    const battle = "test:e2e:hanzi-tower-defense";
+    const selected = (files: string[]) => affectedGateCommands(files).map(command => command.args[1]);
+    const lobbyChanges = [
+      "src/main.ts", "apps/my-game-world/index.ts", "packages/data/playSurfaceManifest.ts",
+      "packages/data/saveKeyInventory.ts", "package.json",
+    ];
+    expect(selected(lobbyChanges)).toContain("test:portfolio:smoke");
+    expect(selected(lobbyChanges)).not.toContain(battle);
+    expect(selected(["docs/hanzi-tower-defense/guide.md"])).not.toContain(battle);
+    expect(selected([
+      ...lobbyChanges, "games/hanzi-tower-defense/model.ts", "packages/ui/input.ts",
+    ]).filter(command => command === battle)).toHaveLength(1);
+    for (const path of [
+      "games/hanzi-tower-defense/model.ts", "packages/ui/input.ts",
+      "packages/presentation/settings.ts", "public/assets/v1.0/tower/icon.svg",
+      "tests/e2e/hanzi-tower-defense/controls.spec.ts", "pnpm-lock.yaml", "<unknown>",
+    ]) expect(selected([path]), path).toContain(battle);
+  });
+
   it("keeps consolidated support and Classic return routes aligned with runtime context", () => {
     expect(PLAY_SURFACE_MANIFEST.find((surface) => surface.id === "classic-math")?.returnRoute).toBe("?world=my-game-world");
     for (const id of ["classic-defense"]) {

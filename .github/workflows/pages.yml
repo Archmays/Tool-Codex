@@ -50,6 +50,14 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
+      - name: Select affected battle checks
+        id: affected
+        if: github.event_name == 'push'
+        env:
+          BASE_SHA: ${{ github.event.before }}
+          HEAD_SHA: ${{ github.sha }}
+        run: pnpm exec tsx tools/portfolio/affected-gates.ts --base "$BASE_SHA" --head "$HEAD_SHA" --github-output
+
       - name: Verify portfolio manifest and generated documentation
         run: pnpm run portfolio:check
 
@@ -122,7 +130,7 @@ jobs:
         run: pnpm run validate:math-world && pnpm run test:e2e:math-world
 
       - name: Validate Hanzi tower defense full battle and controls
-        if: github.event_name != 'workflow_dispatch' || inputs.validation_scope != 'structure-explorer'
+        if: steps.affected.outputs.tower_battle == 'true' || (github.event_name == 'workflow_dispatch' && inputs.validation_scope == 'full')
         run: pnpm run test:e2e:hanzi-tower-defense
         env:
           TD_EVIDENCE_DIR: tmp/tasks/GAME-CODEX-V1.0/tower

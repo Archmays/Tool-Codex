@@ -1,4 +1,5 @@
 import { execFileSync, spawnSync } from "node:child_process";
+import { appendFileSync } from "node:fs";
 import { resolve } from "node:path";
 
 export interface GateCommand { readonly program: string; readonly args: readonly string[]; readonly label: string }
@@ -47,8 +48,17 @@ export function affectedGateCommands(changedFiles: readonly string[]): GateComma
     || file.startsWith("packages/game-core/") || file.startsWith("packages/preferences/") || file.startsWith("apps/my-game-world/") || file === "<unknown>");
   const equationAffected = files.some((file) => file.startsWith("games/equation-slider/") || file.startsWith("tests/equation-slider-") || file.startsWith("tests/e2e/equation-slider"));
   const equationCommands = equationAffected ? [EQUATION_LEVELS, EQUATION_E2E, EQUATION_RELEASE, EQUATION_VISUAL, EQUATION_PLAYTEST] : [];
-  const hanziCommands = files.some(file => file.includes("hanzi-tower-defense")) ? [DEFENSE, DEFENSE_E2E] : [];
-  if (full) return unique([PORTFOLIO_CHECK, PORTFOLIO_EVOLUTION_CHECK, ...equationCommands, ...hanziCommands, INTERACTION_STATIC, SCROLL_STATIC, UNIT, MATH_WORLD_VALIDATE, MEMORY, TYPECHECK, BUILD, MATH_WORLD_E2E, DEFENSE_E2E, ADVENTURE, ADVENTURE_E2E, ENGLISH_E2E, HANZI_STUDY_E2E, STRUCTURE_E2E, MEMORY_E2E, INTERACTION_HITTEST, SCROLL_REACHABILITY, SMOKE]);
+  const defenseChanged = files.some(file =>
+    /^(?:(?:games|tools|public\/assets|tests\/e2e)\/hanzi-tower-defense\/|tests\/hanzi-tower-defense[.-]|playwright\.hanzi-tower-defense\.config\.ts$)/.test(file)
+  );
+  const hanziCommands = defenseChanged ? [DEFENSE] : [];
+  const battleCommands = defenseChanged || files.some(file =>
+    file === "<unknown>" || file === "packages/ui/input.ts" || file === "src/styles.css"
+    || file === "pnpm-lock.yaml" || file === "pnpm-workspace.yaml" || file === "vite.config.ts"
+    || file.startsWith("packages/game-core/") || file.startsWith("packages/presentation/")
+    || file.startsWith("public/assets/v1.0/tower/")
+  ) ? [DEFENSE_E2E] : [];
+  if (full) return unique([PORTFOLIO_CHECK, PORTFOLIO_EVOLUTION_CHECK, ...equationCommands, ...hanziCommands, INTERACTION_STATIC, SCROLL_STATIC, UNIT, MATH_WORLD_VALIDATE, MEMORY, TYPECHECK, BUILD, MATH_WORLD_E2E, ...battleCommands, ADVENTURE, ADVENTURE_E2E, ENGLISH_E2E, HANZI_STUDY_E2E, STRUCTURE_E2E, MEMORY_E2E, INTERACTION_HITTEST, SCROLL_REACHABILITY, SMOKE]);
   const commands: GateCommand[] = [PORTFOLIO_CHECK, PORTFOLIO_EVOLUTION_CHECK];
   for (const file of files) {
     const game = /^games\/([^/]+)\//.exec(file)?.[1];
@@ -65,7 +75,7 @@ export function affectedGateCommands(changedFiles: readonly string[]): GateComma
     else if (file.startsWith("apps/hub/") || file.startsWith("packages/ui/") || file.startsWith("packages/data/") || file.startsWith("public/assets/")) commands.push(INTERACTION_STATIC, SCROLL_STATIC, UNIT, MATH_WORLD_VALIDATE, INTERACTION_HITTEST, SCROLL_REACHABILITY, SMOKE);
     else if (!file.startsWith("docs/") && file !== "README.md" && file !== "AGENTS.md") commands.push(UNIT, TYPECHECK, BUILD, SMOKE);
   }
-  commands.push(...hanziCommands);
+  commands.push(...hanziCommands, ...battleCommands);
   return unique(commands);
 }
 
@@ -94,6 +104,11 @@ if (process.argv[1] && resolve(process.argv[1]) === resolve(import.meta.filename
   const changedFiles = discoverChangedFiles();
   const commands = affectedGateCommands(changedFiles);
   process.stdout.write(`${JSON.stringify({ changedFiles, commands }, null, 2)}\n`);
+  if (process.argv.includes("--github-output")) {
+    const output = process.env.GITHUB_OUTPUT;
+    if (!output) throw new Error("--github-output requires GITHUB_OUTPUT");
+    appendFileSync(output, `tower_battle=${commands.includes(DEFENSE_E2E)}\n`);
+  }
   if (process.argv.includes("--run")) {
     for (const command of commands) {
       const result = spawnSync(command.program, command.args, { cwd: resolve(import.meta.dirname, "../.."), shell: process.platform === "win32", stdio: "inherit" });

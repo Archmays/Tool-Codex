@@ -66,7 +66,7 @@ jobs:
         run: pnpm run test:privacy:natural-use-kit
 
       - name: Run affected gate tier
-        run: pnpm run test:portfolio:affected -- --base "${{ github.event.pull_request.base.sha || github.event.before }}" --head "${{ github.sha }}" --run
+        run: pnpm run test:portfolio:affected -- --base "${{ github.event.pull_request.base.sha || github.event.before || github.sha }}" --head "${{ github.sha }}" --run
 
       - name: Run unit, content, and maintenance safety tests
         run: pnpm test
@@ -122,7 +122,8 @@ jobs:
       - name: Exercise Math World routes, interactions, saves, and lifecycle
         run: pnpm run test:e2e:math-world
 
-      - name: Exercise tower defense battles, inputs, saves, and retired-language fallbacks
+      - name: Exercise full tower defense battles on manual runs
+        if: github.event_name == 'workflow_dispatch'
         run: pnpm run test:e2e:hanzi-tower-defense
         env:
           TD_EVIDENCE_DIR: tmp/tasks/GAME-CODEX-V1.0/tower
