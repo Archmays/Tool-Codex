@@ -27,7 +27,6 @@
 | test:e2e:hanzi-tower-defense | 原110项完整覆盖：87通过/23原有设备专用skip。含自然6/8波、旧六短关及新三短关、波前恢复、键鼠触摸、异常存档 | tower/initial-coverage.json、tower-final.log、desktop-parallel.log、touch-parallel.log |
 | test:e2e:equation-slider / :release / :visual | 30+13+12通过 | puzzles/ 最终日志及截图 |
 | test:e2e:hanzi-word-adventure | 25通过/3原有设备skip，完整20房间与提示/返回/存档 | puzzles/ 最终日志 |
-| test:e2e:world-in-a-box -- --preview | 14/14脚本：11生产构建，3同源版本源码检查，模式明确记录；7/8种配置及故障矩阵 | scenes/final/world-in-a-box/*.json |
 | 四场景直接mount/destroy所有权检查 | 每场景3次，共12次；双destroy后0RAF/观察器/游戏监听，所有AudioContext关闭，pageerrors=0 | scenes/mount-lifecycle.json及复现脚本 |
 | test:e2e:english-study / test:e2e:hanzi-stroke-lab | 英语28+生命周期7通过；汉字143通过/25原有设备skip+生命周期8通过；Chromium/WebKit及各配置设备 | study/ 最终日志 |
 | test:e2e:math-world / test:visual:math-world | 功能102通过/9原有skip；视觉6通过/3原有skip | final-math-browser.log；puzzles/final-math-visual.log |
