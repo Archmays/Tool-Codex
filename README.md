@@ -80,7 +80,7 @@ pnpm build
 1. 把仓库推送到 GitHub。
 2. 在仓库设置中启用 GitHub Pages，并选择 GitHub Actions 作为来源。
 3. 推送到 `main` 分支后，workflow 会自动安装依赖、构建并发布 `dist/`。
-4. 等待 Actions 完成后，使用 GitHub Pages 提供的网页链接访问工具箱。
+4. 等待 Actions 完成后，访问 [GitHub Pages 上的工具箱](https://archmays.github.io/Tool-Codex/)。
 
 项目已设置 Vite `base: "./"`，适合部署在 GitHub Pages 的项目子路径下。
 

@@ -5,7 +5,7 @@ import { chromium, type Page } from "@playwright/test";
 import { RETIRED_LANGUAGE_PLAY_IDS, RETIRED_LANGUAGE_WORLD_IDS } from "../../src/app-route";
 
 const TASK_ID = "GAME-CODEX-STEP1";
-const pagesBase = new URL(process.argv[2] ?? process.env.PLAY_READINESS_PAGES_BASE ?? "https://archmays.github.io/Game-Codex/");
+const pagesBase = new URL(process.argv[2] ?? process.env.PLAY_READINESS_PAGES_BASE ?? "https://archmays.github.io/Tool-Codex/");
 const expectedCommit = (process.argv[3] ?? process.env.PLAY_READINESS_EXPECTED_COMMIT ?? execFileSync("git", ["rev-parse", "HEAD"], { encoding: "utf8" })).trim();
 const output = resolve(`tmp/tasks/${TASK_ID}/reports/PAGES_VERDICT.json`);
 const performanceOutput = resolve(`tmp/tasks/${TASK_ID}/reports/PERFORMANCE_SAMPLE.pages.json`);

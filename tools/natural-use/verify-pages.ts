@@ -5,7 +5,7 @@ import { chromium, type Page } from "@playwright/test";
 import { OBSERVATION_STORAGE_KEY, validateObservationBundle } from "../../packages/observation/natural-use";
 
 const TASK_ID = "GAME-CODEX-NATURAL-USE-OBSERVATION-KIT-06A";
-const pagesBase = new URL(process.argv[2] ?? process.env.NATURAL_USE_PAGES_BASE ?? "https://archmays.github.io/Game-Codex/");
+const pagesBase = new URL(process.argv[2] ?? process.env.NATURAL_USE_PAGES_BASE ?? "https://archmays.github.io/Tool-Codex/");
 const expectedCommit = (process.argv[3] ?? process.env.NATURAL_USE_EXPECTED_COMMIT ?? execFileSync("git", ["rev-parse", "HEAD"], { encoding: "utf8" })).trim();
 const output = resolve(`tmp/tasks/${TASK_ID}/reports/PAGES_VERDICT.json`);
 

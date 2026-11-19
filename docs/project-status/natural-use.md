@@ -4,7 +4,7 @@ Project mode: **NATURAL-USE ACTIVE**. The family-stable product baseline is froz
 
 ## Family quick path
 
-Run `tools\my-game-world\START_MY_GAME_WORLD.cmd`, then use <http://127.0.0.1:5175/> in the same browser profile and origin so existing local progress remains available. The published family entry is <https://archmays.github.io/Game-Codex/>.
+Run `tools\my-game-world\START_MY_GAME_WORLD.cmd`, then use <http://127.0.0.1:5175/> in the same browser profile and origin so existing local progress remains available. The published family entry is <https://archmays.github.io/Tool-Codex/>.
 
 Use the Parent Save Vault occasionally when a local backup is useful. It exports only the declared local save keys; it is not a required routine and does not upload child data.
 

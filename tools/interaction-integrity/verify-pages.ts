@@ -15,7 +15,7 @@ function requireValue(condition: unknown, message: string): asserts condition {
   if (!condition) throw new Error(message);
 }
 
-const pagesBase = new URL(option("--base") ?? "https://archmays.github.io/Game-Codex/");
+const pagesBase = new URL(option("--base") ?? "https://archmays.github.io/Tool-Codex/");
 const expectedCommit = (option("--commit") ?? execFileSync("git", ["rev-parse", "HEAD"], { cwd: root, encoding: "utf8" })).trim();
 const output = resolve(root, option("--output") ?? "tmp/tasks/GAME-CODEX-STEP1/reports/PAGES_INTERACTION.json");
 const errors: string[] = [];
