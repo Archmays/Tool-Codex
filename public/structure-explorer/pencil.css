@@ -21,6 +21,7 @@ dialog header button{flex-shrink:0;white-space:nowrap;font-size:16px}
 #explode-readout { min-width: 44px; font-variant-numeric: tabular-nums; }
 .part-tray { margin: 0; }
 .part-tray button { display: flex; align-items: center; justify-content: center; gap: 6px; flex: 1 1 auto; }
+@media(min-width:761px) { .part-tray button { flex: 0 1 auto; } }
 .part-tray .material-swatch { width: 11px; height: 11px; }
 #toggle-labels { margin-left: auto; font-size: 15px; padding-inline: 10px; }
 #toggle-labels[aria-pressed=true] { background: #e3ecdf; border-color: #436d5a; color: #254438; }

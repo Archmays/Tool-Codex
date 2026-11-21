@@ -826,6 +826,15 @@ test('redesign: structure renders and picks, materials explain their sources, wr
   const guide = page.locator('[data-directory-material="wood"]');
   await activate(guide.locator('summary').first());
   await expect(guide.locator('.origin-steps li')).toHaveCount(4);
+  const guideGrid = await guide.locator('.origin-steps').evaluate(steps => {
+    const card = steps.closest('.directory-material')!;
+    const cards = card.parentElement!;
+    return {
+      columns: getComputedStyle(steps).gridTemplateColumns.split(' ').length,
+      spansRow: Math.abs(card.getBoundingClientRect().width - cards.getBoundingClientRect().width) < 1,
+    };
+  });
+  expect(guideGrid).toEqual({ columns: page.viewportSize()!.width > 650 ? 2 : 1, spansRow: true });
   await expect(guide.getByRole('link', { name: '探索铅笔 →' })).toBeVisible();
   await screenshot('01-directory');
   await activate(guide.getByRole('link', { name: '探索铅笔 →' }));
@@ -899,6 +908,17 @@ test('redesign: structure renders and picks, materials explain their sources, wr
     await expect(host).toHaveAttribute('data-selected', 'core');
     expect(await pixels()).not.toBe(before);
     await expect(pencilFrame.locator('#inspector-dialog')).not.toBeVisible();
+    if (section === 'cross') {
+      const bubbles = host.locator('.part-label-anchor:visible span');
+      await expect(bubbles).toHaveCount(6);
+      const clipped = await bubbles.evaluateAll(labels => labels.flatMap(label => {
+        const box = label.getBoundingClientRect();
+        const hostBox = label.closest('#three-host')!.getBoundingClientRect();
+        return box.left < hostBox.left || box.top < hostBox.top ||
+          box.right > hostBox.right || box.bottom > hostBox.bottom ? [label.textContent] : [];
+      }));
+      expect(clipped, 'Cross-section bubbles fit inside the canvas').toEqual([]);
+    }
     await screenshot(name);
   }
   await activate(pencilFrame.locator('#part-origin'));
@@ -942,6 +962,13 @@ test('redesign: structure renders and picks, materials explain their sources, wr
   await expect(pencilFrame.locator('#compare-result')).toContainText('石墨比例越高');
   await screenshot('07-writing-comparison');
   await activate(pencilFrame.locator('[data-mode="3"]'));
+  await activate(pencilFrame.locator('#seed'));
+  await pencilFrame.locator('#position').press('PageUp');
+  await pencilFrame.locator('#position').press('PageUp');
+  await pencilFrame.locator('#position').press('PageUp');
+  expect((await state(page)).crumbs).toBeGreaterThan(0);
+  await expect(pencilFrame.locator('#eraser-material')).toBeVisible();
+  await screenshot('08-erase');
   await activate(pencilFrame.locator('[data-origin-link="rubber"]'));
   await expect(pencilFrame.locator('#material-title')).toContainText('天然橡胶');
   await expect(pencilFrame.locator('#material-title')).toBeFocused();

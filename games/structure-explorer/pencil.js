@@ -106,7 +106,9 @@ function renderLabels(points) {
   const layer = $('#part-labels');
   layer.hidden = !showLabels;
   if (!showLabels) return;
-  const width = layer.clientWidth;
+  const { clientWidth: width, clientHeight: height } = layer;
+  const inset = 8;
+  const clamp = (value, min, max) => Math.max(min, Math.min(max, value));
   const used = [];
   const visibleIds = new Set();
   for (const { id, x, y } of points) {
@@ -122,17 +124,33 @@ function renderLabels(points) {
       layer.append(anchor);
       labelAnchors.set(id, anchor);
     }
-    const xOffset = view === 'cross' && id.startsWith('paint') ? 37 : 0;
-    const direction = id.endsWith('upper') ? -1 : 1;
-    const left = Math.max(49, Math.min(width - 49, x + xOffset));
-    let top = y + (id === 'core' ? -22 : direction * 20);
-    while (used.some(([px, py]) => Math.abs(px - left) < 86 && Math.abs(py - top) < 25)) top += direction * 27;
-    used.push([left, top]);
     anchor.hidden = false;
+    const bubble = anchor.firstElementChild;
+    const halfWidth = bubble.offsetWidth / 2;
+    const halfHeight = bubble.offsetHeight / 2;
+    const isCrossPaint = view === 'cross' && id.startsWith('paint');
+    const direction = id.endsWith('upper') ? -1 : 1;
+    const left = clamp(x + (isCrossPaint ? 44 : 0), inset + halfWidth, width - inset - halfWidth);
+    const minTop = inset + halfHeight;
+    const maxTop = height - inset - halfHeight;
+    const initialTop = clamp(y + (isCrossPaint ? 0 : id === 'core' ? -22 : direction * 20), minTop, maxTop);
+    const step = bubble.offsetHeight + 5;
+    let top = initialTop;
+    const overlaps = candidate => used.some(label =>
+      Math.abs(label.left - left) < label.halfWidth + halfWidth + 4 &&
+      Math.abs(label.top - candidate) < label.halfHeight + halfHeight + 4
+    );
+    for (let offset = step; overlaps(top) && offset < height; offset += step) {
+      const preferred = initialTop + direction * offset;
+      const alternate = initialTop - direction * offset;
+      if (preferred >= minTop && preferred <= maxTop && !overlaps(preferred)) top = preferred;
+      else if (alternate >= minTop && alternate <= maxTop && !overlaps(alternate)) top = alternate;
+    }
+    used.push({ left, top, halfWidth, halfHeight });
     anchor.style.left = x + 'px';
     anchor.style.top = y + 'px';
-    anchor.firstElementChild.style.left = (left - x) + 'px';
-    anchor.firstElementChild.style.top = (top - y) + 'px';
+    bubble.style.left = (left - x + anchor.offsetWidth / 2) + 'px';
+    bubble.style.top = (top - y + anchor.offsetHeight / 2) + 'px';
   }
   for (const [id, anchor] of labelAnchors) anchor.hidden = !visibleIds.has(id);
 }

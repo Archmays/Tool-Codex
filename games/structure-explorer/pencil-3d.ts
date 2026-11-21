@@ -82,7 +82,12 @@ export function createPencil3D(host: HTMLElement, notify: (state: StructureState
     cutReference.visible = section;
     cuttingPlane.rotation.set(view === 'longitudinal' ? Math.PI / 2 : 0, view === 'cross' ? Math.PI / 2 : 0, 0);
     cuttingPlane.scale.set(view === 'cross' ? 1 : 9, 1, 1);
-    cross.rotation.set(0, -Math.PI / 2, 0); cross.scale.setScalar(5.6); cross.position.y = -.5;
+    const aspect = Math.max(.2, host.clientWidth / Math.max(1, canvas.clientHeight));
+    const compactCross = cross.visible && (aspect < 1.25 || canvas.clientHeight < 260);
+    cross.rotation.set(0, -Math.PI / 2, 0);
+    cross.scale.setScalar(compactCross ? 4.7 : 5.6);
+    cross.position.y = -.5;
+    cutReference.position.y = compactCross ? 2.65 : 2.5;
     longitudinal.rotation.x = -Math.PI / 2; longitudinal.position.y = -.5;
     const isolatedParts = isolated ? groupedParts[isolated] ?? [isolated] : null;
     for (const [id, group] of parts) {
@@ -94,9 +99,12 @@ export function createPencil3D(host: HTMLElement, notify: (state: StructureState
     const focusIds = selected ? [selected, ...(groupedParts[selected] ?? [])] : [];
     for (const { mesh, id, material } of meshes) {
       const focused = !isolated && focusIds.includes(id);
-      const shell = view === 'xray' && !isolated && id !== 'core';
-      const ghost = !isolated && !!selected && !focused && !(view === 'xray' && id === 'core');
-      material.opacity = ghost ? .22 : shell ? .24 : 1;
+      const xray = view === 'xray' && !isolated;
+      const shell = xray && id !== 'core';
+      const ghost = !isolated && !!selected && !focused;
+      const shellOpacity = id.startsWith('paint') ? .13 : .15;
+      material.opacity = shell ? shellOpacity * (ghost ? .75 : 1) : ghost && !xray ? .22 : 1;
+      if (id === 'core') material.color.setScalar(xray ? .55 : 1);
       const transparent = material.opacity < 1;
       if (material.transparent !== transparent) {
         material.transparent = transparent;
@@ -105,9 +113,8 @@ export function createPencil3D(host: HTMLElement, notify: (state: StructureState
       material.depthWrite = !transparent;
       material.emissive.set(focused ? '#a96c23' : '#000000');
       material.emissiveIntensity = focused ? .28 : 0;
-      mesh.renderOrder = shell && focused ? 2 : 0;
+      mesh.renderOrder = xray && id === 'core' ? 3 : shell && focused ? 2 : 0;
     }
-    const aspect = Math.max(.2, host.clientWidth / Math.max(1, canvas.clientHeight));
     pivot.rotation.set(rotation[0], rotation[1], isolated && isolated !== 'tip' && aspect < 1 ? .9 : -.04);
     pivot.position.set(pan[0] + (isolated === 'tip' ? 4.3 : 0), pan[1], 0);
     const width = isolated && isolated !== 'tip' && aspect < 1 ? 8 : isolated ? 11.2 : view === 'cross' ? 6.4 : 12.2;
