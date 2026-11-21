@@ -24,3 +24,10 @@
 三维几何由本项目绘制，比例为教学示意。两片开槽木材围住连续笔芯；接合处是胶合边界，不添加未定义的笔芯外环。黄色表面涂层仅覆盖未削笔杆，削尖处展示裸露木材与笔芯。装配关系依据 [Faber-Castell 木杆铅笔胶合说明](https://www.faber-castell.eu/service/frequently-asked-questions/faq-pens-and-pencils)。
 
 BOOM 将两片木材、笔芯和两半涂层分别排列。木材和笔芯在实际产品中粘合，不能像演示一样随意拆开；涂层独立展示为教学剥离，不是可拆外壳。笔尖属于木材与笔芯的削切区域，并非额外零件。红色面表示切的位置与方向；横剖截片单独放大，接合虚线表示两片木材的边界，厚度与放大尺寸均非实测。
+
+## 材料溯源与配比示意
+
+- 木板开槽、放芯、压合和涂装的工序参考 [Pencils.com 的木杆铅笔制造图解](https://pencils.com/pages/pencil-making-process)。开槽通常成排进行。三维木纹与接合虚线由程序绘制，线宽、漆层深浅与拆开距离用于观察。
+- 石墨、黏土和水混合成料，挤出、干燥、入窑烧结后可浸油蜡。步骤依据 [施德楼木杆铅笔制造资料](https://www.staedtler.com/fileadmin/user_upload/Product/STAEDTLER-Promotional-Products-2023_GB-FR.pdf)。配比条只表示在同类笔芯中随等级变化的方向，各厂家有自己的配方。矿物提纯、炉温和浸蜡属于不同生产实例，图鉴展示常见路线。
+- 纸浆纤维可以来自木材或回收纸。纸浆铺到成形网上脱水，再经过压榨和干燥。[Sappi 造纸概览](https://www.sappi.com/en-gb/insights/articles/how-paper-made)；[Sappi 纸厂工艺说明](https://cdn-s3.sappi.com/s3fs-public/2021-Kirkniemi-Mill-Environmental-Statement%E2%80%93%28EMAS%29.pdf)。成品表面取决于纤维与压光、涂布等工序。示意图中的凹凸和纸纤维均放大呈现。
+- 橡皮可使用天然或合成橡胶及软质塑料，配合填料、软化剂等成形。模压与挤出等路线取决于材料。[施德楼橡皮材料与制造专利](https://patents.google.com/patent/US4335033A/en)。擦除演示展示橡皮接触、黏附与带走石墨的过程，发生转移时橡皮无需熔化。

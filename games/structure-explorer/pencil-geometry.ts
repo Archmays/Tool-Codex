@@ -120,11 +120,49 @@ function woodTexture(): THREE.CanvasTexture | null {
   return texture;
 }
 
-function materials(): { wood: THREE.MeshStandardMaterial; paint: THREE.MeshStandardMaterial; core: THREE.MeshStandardMaterial } {
+function detailTexture(kind: 'end-grain' | 'graphite'): THREE.CanvasTexture {
+  const canvas = document.createElement('canvas');
+  canvas.width = canvas.height = 256;
+  const ctx = canvas.getContext('2d')!;
+  ctx.fillStyle = kind === 'graphite' ? '#36393e' : '#edca9a';
+  ctx.fillRect(0, 0, 256, 256);
+  if (kind === 'end-grain') {
+    ctx.strokeStyle = '#c79864';
+    for (let i = 1; i < 24; i++) {
+      ctx.globalAlpha = i % 4 === 0 ? .54 : .28;
+      ctx.lineWidth = i % 4 === 0 ? 1.8 : .85;
+      ctx.beginPath();
+      ctx.ellipse(113, 163, i * 9.4, i * 8, .2, 0, Math.PI * 2);
+      ctx.stroke();
+    }
+  } else {
+    let seed = 759;
+    for (let i = 0; i < 3500; i++) {
+      seed = (Math.imul(seed, 1664525) + 1013904223) >>> 0;
+      ctx.fillStyle = i % 3 ? '#44474d' : '#282b30';
+      ctx.fillRect(seed & 255, (seed >>> 16) & 255, 1 + (i % 4 === 0 ? 1 : 0), 1);
+    }
+  }
+  const texture = new THREE.CanvasTexture(canvas);
+  texture.colorSpace = THREE.SRGBColorSpace;
+  texture.wrapS = texture.wrapT = THREE.RepeatWrapping;
+  return texture;
+}
+
+function sectionEndGrain(geometry: THREE.BufferGeometry): THREE.BufferGeometry {
+  const positions = geometry.getAttribute('position');
+  const uv = geometry.getAttribute('uv');
+  for (let i = 0; i < positions.count; i++) {
+    uv.setXY(i, .5 + positions.getZ(i) / .7, .5 + positions.getY(i) / .7);
+  }
+  return geometry;
+}
+
+function materials() {
   return {
     wood: new THREE.MeshStandardMaterial({ color: 0xffffff, map: woodTexture(), roughness: 0.88 }),
     paint: new THREE.MeshStandardMaterial({ color: 0xe6b628, roughness: 0.38, metalness: 0 }),
-    core: new THREE.MeshStandardMaterial({ color: 0x34383c, roughness: 0.7, metalness: 0.05 }),
+    core: new THREE.MeshStandardMaterial({ map: detailTexture('graphite'), roughness: 0.58, metalness: 0.16 }),
   };
 }
 
@@ -154,8 +192,10 @@ export function createCrossSection(): THREE.Group {
   const root = new THREE.Group(), parts = new Map<string, THREE.Group>(), m = materials();
   root.name = 'cross-section'; root.userData.cutAxis = 'X';
   const from = -0.07, to = 0.07;
-  addPart(root, parts, 'wood-upper', woodGeometry(true, from, to), m.wood);
-  addPart(root, parts, 'wood-lower', woodGeometry(false, from, to), m.wood);
+  m.wood.map?.dispose();
+  m.wood.map = detailTexture('end-grain');
+  addPart(root, parts, 'wood-upper', sectionEndGrain(woodGeometry(true, from, to)), m.wood);
+  addPart(root, parts, 'wood-lower', sectionEndGrain(woodGeometry(false, from, to)), m.wood);
   addPart(root, parts, 'core', coreGeometry(from, to), m.core);
   addPart(root, parts, 'paint-upper', paintGeometry(true, from, to), m.paint);
   addPart(root, parts, 'paint-lower', paintGeometry(false, from, to), m.paint);

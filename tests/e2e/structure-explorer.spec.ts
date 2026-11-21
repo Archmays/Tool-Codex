@@ -1,6 +1,6 @@
 import { test as base, expect, type Page, type Locator } from '@playwright/test';
 
-type StructureState = { rotation: [number, number]; pan: [number, number]; dragMode: 'rotate' | 'pan'; scale: number; selected: string | null; gesturing: boolean; ready: boolean; view: string; exploded: boolean; contextLost: boolean };
+type StructureState = { rotation: [number, number]; pan: [number, number]; dragMode: 'rotate' | 'pan'; scale: number; selected: string | null; gesturing: boolean; ready: boolean; view: string; exploded: boolean; explodeAmount: number; inspecting: boolean; contextLost: boolean };
 type DemoState = { mode: number; open: number; pos: number; auto: boolean; marks: number[]; crumbs: number; pressure: number; grade: string; zoom: number; view: string; part: string; processStep: number; structure: StructureState };
 // Preserve a Pages subdirectory when an explicitly requested remote base is used.
 const basePath = process.env.STRUCTURE_BASE_URL ? new URL(process.env.STRUCTURE_BASE_URL).pathname.replace(/\/?$/, '/') : '/';
@@ -13,7 +13,7 @@ async function state(page: Page): Promise<DemoState> {
   return stage(page).evaluate(() => (window as unknown as { pencilDemo: { state(): DemoState } }).pencilDemo.state());
 }
 const ink = (s: DemoState) => s.marks.reduce((sum, value) => sum + value, 0);
-const parts = ['wood-upper', 'wood-lower', 'core', 'paint-upper', 'paint-lower', 'tip'];
+const parts = ['wood-upper', 'wood-lower', 'core', 'paint-upper', 'paint-lower', 'tip', 'seam'];
 async function ready3d(page: Page) {
   await expect(frame(page).locator('canvas#pencil-3d')).toBeVisible();
   await expect.poll(async () => (await state(page)).structure.ready).toBe(true);
@@ -89,17 +89,16 @@ test('BOOM stops after opening and closing; writing motion starts explicitly, pa
   for (const exploded of [true, false]) {
     await frame(page).locator('#boom').click();
     await expect.poll(async () => (await state(page)).structure.exploded).toBe(exploded);
-    expect((await state(page)).open).toBe(exploded ? 1 : 0);
+    await expect.poll(async () => (await state(page)).open).toBe(exploded ? 1 : 0);
     expect((await state(page)).auto).toBe(false);
     // open is an immediate semantic value. Compare rendered canvas pixels after the bounded
     // transition so this verifies a stable visual result, rather than an automatic oscillation.
-    await page.waitForTimeout(800);
     const settled = await capture();
     await page.waitForTimeout(200);
     expect((await capture()).equals(settled), 'BOOM stays at its completed visual position').toBe(true);
     expect(settled.equals(assembled), 'Opening changes the rendered geometry; closing restores it').toBe(!exploded);
   }
-  await frame(page).locator('[data-mode="1"]').click();
+  await frame(page).locator('[data-mode="2"]').click();
   await frame(page).locator('#auto').click();
   await expect.poll(async () => ink(await state(page))).toBeGreaterThan(5);
   await frame(page).locator('#auto').click();
@@ -109,7 +108,7 @@ test('BOOM stops after opening and closing; writing motion starts explicitly, pa
   expect(await state(page)).toEqual(paused);
   await frame(page).locator('#auto').click();
   expect((await state(page)).auto).toBe(true);
-  await frame(page).locator('[data-mode="2"]').click();
+  await frame(page).locator('[data-mode="3"]').click();
   expect((await state(page)).auto).toBe(false);
   await frame(page).locator('#reset').click();
   expect(ink(await state(page))).toBe(0);
@@ -158,28 +157,28 @@ test('keyboard: home → directory → pencil, native controls, return and reloa
   await page.keyboard.press('Space');
   expect((await state(page)).structure.exploded, 'Native Space activates BOOM exactly once').toBe(true);
   const upperWoodLabel = frame(page).locator('[data-inspect-part="wood-upper"]');
-  await tabTo(page, frame(page).locator('[data-inspect-part="paint-upper"]'));
+  await tabTo(page, frame(page).locator('[data-inspect-part="all"]'));
+  await page.keyboard.press('ArrowRight');
+  await page.keyboard.press('ArrowRight');
   await page.keyboard.press('ArrowRight');
   await expect(upperWoodLabel).toBeFocused();
   await page.keyboard.press('Enter');
-  expect((await state(page)).structure.selected, 'A part button activates independently of stage shortcuts').toBe('wood-upper');
+  expect((await state(page)).structure.selected).toBe('wood-upper');
   const partDialog = frame(page).locator('#inspector-dialog');
+  await expect(partDialog).not.toBeVisible();
+  await page.keyboard.press('Tab');
+  await expect(frame(page).locator('#observation-tools summary')).toBeFocused();
+  const inspect = frame(page).locator('#inspect-part');
+  await tabTo(page, inspect);
+  await page.keyboard.press('Enter');
+  await expect(partDialog).toBeVisible();
   for (let i = 0; i < 12; i++) {
     await page.keyboard.press('Tab');
     expect(await partDialog.evaluate(el => el.contains(el.ownerDocument.activeElement))).toBe(true);
   }
   await page.keyboard.press('Escape');
-  await expect(upperWoodLabel).toBeFocused();
-  expect((await state(page)).structure.selected).toBeNull();
-  await tabTo(page, frame(page).locator('#part'));
-  // Open the native popup before navigating: on Chromium a closed select changes immediately
-  // on ArrowDown, which opens inspection and moves focus before Enter can commit the option.
-  await page.keyboard.press('Alt+ArrowDown');
-  await page.keyboard.press('Home');
-  await page.keyboard.press('ArrowDown');
-  await page.keyboard.press('Enter');
-  await expect.poll(async () => (await state(page)).structure.selected).toBe('wood-upper');
-  await tabTo(page, stage(page));
+  await expect(inspect).toBeFocused();
+  expect((await state(page)).structure.selected).toBe('wood-upper');
   await page.keyboard.press('Escape');
   expect((await state(page)).structure.selected).toBeNull();
   const modes = frame(page).locator('[data-mode]');
@@ -189,21 +188,26 @@ test('keyboard: home → directory → pencil, native controls, return and reloa
   await expect(modes.nth(1)).toHaveAttribute('tabindex', '0');
   await expect(modes.nth(0)).toHaveAttribute('tabindex', '-1');
   await page.keyboard.press('Tab');
+  await expect(frame(page).locator('[data-map-node="0"]')).toBeFocused();
+  await page.keyboard.press('Shift+Tab');
+  await page.keyboard.press('Home');
+  await expect(modes.nth(0)).toBeFocused();
+  await page.keyboard.press('ArrowLeft');
+  await expect(modes.nth(3)).toBeFocused();
+  await page.keyboard.press('ArrowLeft');
+  await expect(modes.nth(2)).toBeFocused();
+  await page.keyboard.press('Tab');
   await expect(frame(page).locator('#expand-view')).toBeFocused();
   await page.keyboard.press('Tab');
   await expect(stage(page)).toBeFocused();
   await page.keyboard.press('End');
   await expect.poll(async () => ink(await state(page))).toBeGreaterThan(10);
   await page.keyboard.press('Shift+Tab');
-  await expect(frame(page).locator('#expand-view')).toBeFocused();
   await page.keyboard.press('Shift+Tab');
-  await expect(modes.nth(1)).toBeFocused();
-  await page.keyboard.press('End');
   await expect(modes.nth(2)).toBeFocused();
-  await page.keyboard.press('Tab');
-  await expect(frame(page).locator('#expand-view')).toBeFocused();
-  await page.keyboard.press('Tab');
-  await expect(stage(page)).toBeFocused();
+  await page.keyboard.press('End');
+  await expect(modes.nth(3)).toBeFocused();
+  await tabTo(page, stage(page));
   await page.keyboard.press('End');
   await expect.poll(async () => (await state(page)).crumbs).toBeGreaterThan(0);
   await tabTo(page, frame(page).locator('#reset'));
@@ -221,7 +225,7 @@ test('keyboard: home → directory → pencil, native controls, return and reloa
 
 test('mouse writes, erases, resets, cancels pending taps and stops on blur', async ({ page }) => {
   await page.goto(pencil);
-  await frame(page).locator('[data-mode="1"]').click();
+  await frame(page).locator('[data-mode="2"]').click();
   const p = await point(page);
   await page.mouse.move(p.x, p.y);
   await page.mouse.down();
@@ -251,7 +255,7 @@ test('mouse writes, erases, resets, cancels pending taps and stops on blur', asy
   await page.mouse.click(writePoint.x, writePoint.y);
   await expect.poll(async () => ink(await state(page))).toBeGreaterThan(10);
   const beforeErase = ink(await state(page));
-  await frame(page).locator('[data-mode="2"]').click();
+  await frame(page).locator('[data-mode="3"]').click();
   const eraserPoint = await point(page);
   await page.mouse.click(eraserPoint.x, eraserPoint.y);
   await expect.poll(async () => ink(await state(page))).toBeLessThan(beforeErase);
@@ -261,7 +265,7 @@ test('mouse writes, erases, resets, cancels pending taps and stops on blur', asy
   await page.mouse.click(blankPoint.x, blankPoint.y);
   await expect.poll(async () => (await state(page)).pos).toBeGreaterThan(.2);
   expect(ink(await state(page)), 'Erasing a blank sheet does not create ink').toBe(0);
-  await frame(page).locator('[data-mode="1"]').click();
+  await frame(page).locator('[data-mode="2"]').click();
   const blurPoint = await point(page);
   await page.mouse.move(blurPoint.x, blurPoint.y);
   await page.mouse.down();
@@ -279,12 +283,12 @@ test('touch completes writing, erasing, reset and return', async ({ page, contex
   test.skip(!testInfo.project.use.hasTouch, 'Touch profiles only');
   await page.goto(directory);
   await page.locator('[data-structure-pencil]').tap();
-  await frame(page).locator('[data-mode="1"]').tap();
+  await frame(page).locator('[data-mode="2"]').tap();
   const p = await point(page);
   await page.touchscreen.tap(p.x, p.y);
   await expect.poll(async () => ink(await state(page))).toBeGreaterThan(10);
   const beforeErase = ink(await state(page));
-  await frame(page).locator('[data-mode="2"]').tap();
+  await frame(page).locator('[data-mode="3"]').tap();
   const q = await point(page);
   await page.touchscreen.tap(q.x, q.y);
   await expect.poll(async () => ink(await state(page))).toBeLessThan(beforeErase);
@@ -313,7 +317,15 @@ test('responsive layout and iframe height accommodate every mode', async ({ page
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1)).toBe(true);
   await page.screenshot({ path: testInfo.outputPath('temporary-directory.png'), fullPage: true });
   await page.locator('[data-structure-pencil]').click();
-  for (const mode of [0, 1, 2]) {
+  if (['mobile-360', 'mobile-390'].includes(testInfo.project.name)) {
+    const canvas = frame(page).locator('#pencil-3d');
+    await expect(canvas).toBeVisible();
+    await expect.poll(async () => {
+      const box = await canvas.boundingBox();
+      return box !== null && box.y + box.height / 2 < page.viewportSize()!.height;
+    }).toBe(true);
+  }
+  for (const mode of [0, 1, 2, 3]) {
     await frame(page).locator(`[data-mode="${mode}"]`).click();
     await expect.poll(async () => frame(page).locator('body').evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1)).toBe(true);
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1)).toBe(true);
@@ -328,22 +340,17 @@ test('responsive layout and iframe height accommodate every mode', async ({ page
 test('structure views, part inspection and zoom remain usable in the enlarged dialog', async ({ page }) => {
   await page.goto(pencil);
   await ready3d(page);
-  await revealControl(frame(page).locator('#view'));
-  for (const view of ['assembled', 'exploded', 'longitudinal', 'cross']) {
-    await frame(page).locator('#view').selectOption(view);
-    expect((await state(page)).view).toBe(view);
+  for (const view of ['assembled', 'xray', 'exploded', 'longitudinal', 'cross']) {
+    await frame(page).locator('#view-buttons [data-view="' + view + '"]').click();
     expect((await state(page)).structure.view).toBe(view);
     await ready3d(page);
   }
+  await frame(page).locator('#view-buttons [data-view="exploded"]').click();
   for (const part of [...parts, 'all']) {
-    await frame(page).locator('#part').selectOption(part);
+    await frame(page).locator('[data-inspect-part="' + part + '"]').click();
     expect((await state(page)).part).toBe(part);
     expect((await state(page)).structure.selected).toBe(part === 'all' ? null : part);
-    if (part !== 'all') {
-      await expect(frame(page).locator('#inspector-dialog')).toBeVisible();
-      await frame(page).locator('#return-parts').click();
-      expect((await state(page)).structure.selected).toBeNull();
-    }
+    await expect(frame(page).locator('#inspector-dialog')).not.toBeVisible();
   }
   const initialZoom = (await state(page)).zoom;
   await revealControl(frame(page).locator('#zoom-in'));
@@ -354,18 +361,19 @@ test('structure views, part inspection and zoom remain usable in the enlarged di
   await frame(page).locator('#view-reset').click();
   expect((await state(page)).zoom).toBe(1);
   const opener = frame(page).locator('#expand-view');
-  await frame(page).locator('#boom').click();
-  await opener.click();
+  await frame(page).locator('[data-inspect-part="core"]').click();
+  const inspect = frame(page).locator('#inspect-part');
+  await inspect.click();
   const dialog = frame(page).locator('#inspector-dialog');
   await expect(dialog).toBeVisible();
   await expect(dialog.locator('#stage')).toHaveCount(1);
   await expect(frame(page).locator('#stage')).toHaveCount(1);
   await ready3d(page);
-  await frame(page).locator('[data-inspect-part="core"]').click();
-  expect((await state(page)).structure.selected).toBe('core');
+  expect((await state(page)).structure.inspecting).toBe(true);
   await frame(page).locator('#return-parts').click();
-  expect((await state(page)).structure.selected).toBeNull();
-  // Leaving a single-part inspection closes its dialog; reopen the general enlarged view.
+  await expect(inspect).toBeFocused();
+  expect((await state(page)).structure.selected).toBe('core');
+  expect((await state(page)).structure.inspecting).toBe(false);
   await opener.click();
   await expect(dialog).toBeVisible();
   expect((await state(page)).auto).toBe(false);
@@ -400,9 +408,8 @@ test('mouse rotates the 3D pencil without selecting, zooms and inspects each exp
   expect((await state(page)).structure.selected).toBeNull();
   await page.mouse.up();
   await expect.poll(async () => (await state(page)).structure.selected).toBe('core');
-  await expect(frame(page).locator('#inspector-dialog')).toBeVisible();
-  await frame(page).locator('#return-parts').click();
   await expect(frame(page).locator('#inspector-dialog')).not.toBeVisible();
+  await frame(page).locator('[data-inspect-part="all"]').click();
   const before = (await state(page)).structure;
   const p = await canvasPoint(page);
   await page.mouse.move(p.x, p.y);
@@ -422,7 +429,7 @@ test('mouse rotates the 3D pencil without selecting, zooms and inspects each exp
     await frame(page).locator(`[data-inspect-part="${part}"]`).click();
     expect((await state(page)).structure.selected).toBe(part);
     expect((await state(page)).part).toBe(part);
-    await frame(page).locator('#return-parts').click();
+    await frame(page).locator('[data-inspect-part="all"]').click();
     expect((await state(page)).structure.selected).toBeNull();
     expect((await state(page)).structure.exploded).toBe(true);
   }
@@ -481,17 +488,18 @@ test('left mouse pans by mode or Shift, cancels safely and preserves the explode
   expect(shifted.rotation).toEqual(rotated.rotation);
   expect(shifted.dragMode, 'Shift only temporarily changes the gesture').toBe('rotate');
   expect(shifted.selected).toBeNull();
-  await frame(page).locator('#boom').click();
+  await frame(page).locator('#view-buttons [data-view="exploded"]').click();
   await panButton.click();
   const box = (await canvasPoint(page)).box;
   await page.mouse.click(box.x + box.width / 2, box.y + box.height / 2, { button: 'left' });
   expect((await state(page)).structure.selected, 'A light click still picks geometry in pan mode').toBe('core');
-  await frame(page).locator('#return-parts').click();
+  await frame(page).locator('[data-inspect-part="all"]').click();
   await drag();
   const exploded = (await state(page)).structure;
   expect(exploded.exploded).toBe(true);
   expect(exploded.pan).not.toEqual([0, 0]);
   await frame(page).locator('[data-inspect-part="core"]').click();
+  await frame(page).locator('#inspect-part').click();
   await expect(frame(page).locator('#inspector-dialog')).toBeVisible();
   await expect(panButton).toBeVisible();
   await panButton.click();
@@ -503,7 +511,7 @@ test('left mouse pans by mode or Shift, cancels safely and preserves the explode
   expect(singlePanned.selected).toBe('core');
   await frame(page).locator('#return-parts').click();
   const restored = (await state(page)).structure;
-  expect(restored.selected).toBeNull();
+  expect(restored.selected).toBe('core');
   expect(restored.pan).toEqual(exploded.pan);
   expect(restored.rotation).toEqual(exploded.rotation);
   expect(restored.scale).toBe(exploded.scale);
@@ -572,7 +580,9 @@ test('device-emulated touch taps parts, rotates with one finger and pinches with
   await frame(page).locator('#boom').tap();
   await frame(page).locator('[data-inspect-part="wood-upper"]').tap();
   expect((await state(page)).structure.selected).toBe('wood-upper');
+  await frame(page).locator('#inspect-part').tap();
   await frame(page).locator('#return-parts').tap();
+  await frame(page).locator('[data-inspect-part="all"]').tap();
   expect((await state(page)).structure.selected).toBeNull();
   const cdp = await context.newCDPSession(page);
   const touch = (id: number, x: number, y: number) => ({ id, x, y, radiusX: 4, radiusY: 4, force: 1 });
@@ -650,12 +660,11 @@ test('3D controls and exploded part targets are at least 44px, unobstructed and 
   for (const part of parts) {
     await activate(frame(page).locator(`[data-inspect-part="${part}"]`));
     expect((await state(page)).structure.selected).toBe(part);
-    await activate(frame(page).locator('#return-parts'));
+    await activate(frame(page).locator('[data-inspect-part="all"]'));
     expect((await state(page)).structure.selected).toBeNull();
   }
-  await checkTarget(frame(page).locator('#part'));
-  await revealControl(frame(page).locator('#view'));
-  await checkTarget(frame(page).locator('#view'));
+  await checkTarget(frame(page).locator('#explode-slider'));
+  for (const view of await frame(page).locator('#view-buttons [data-view]').all()) await checkTarget(view);
   await revealControl(frame(page).locator('#zoom-in'));
   for (const id of ['zoom-in', 'zoom-out', 'pan-left', 'pan-right', 'pan-up', 'pan-down', 'view-reset']) {
     await activate(frame(page).locator(`#${id}`));
@@ -667,7 +676,7 @@ test('3D controls and exploded part targets are at least 44px, unobstructed and 
 test('controlled comparisons keep three real traces and survive ordinary paper and setting changes', async ({ page }, testInfo) => {
   await page.goto(pencil);
   const activate = async (target: Locator) => testInfo.project.use.hasTouch ? target.tap() : target.click();
-  await activate(frame(page).locator('[data-mode="1"]'));
+  await activate(frame(page).locator('[data-mode="2"]'));
   const rows = frame(page).locator('[data-comparison-row]');
   for (const kind of ['grade', 'pressure', 'paper', 'passes']) {
     await frame(page).locator('#compare-kind').selectOption(kind);
@@ -704,7 +713,7 @@ test('controlled comparisons keep three real traces and survive ordinary paper a
 test('micro process advances and reverses explicitly in writing and erasing modes', async ({ page }, testInfo) => {
   await page.goto(pencil);
   const activate = async (target: Locator) => testInfo.project.use.hasTouch ? target.tap() : target.click();
-  for (const mode of [1, 2]) {
+  for (const mode of [2, 3]) {
     await activate(frame(page).locator(`[data-mode="${mode}"]`));
     const slider = frame(page).locator('#process-step');
     await tabTo(page, slider);
@@ -737,7 +746,7 @@ test('micro process advances and reverses explicitly in writing and erasing mode
 test('automatic erasing never draws on blank paper or replaces a faint line', async ({ page }) => {
   await page.emulateMedia({ reducedMotion: 'reduce' });
   await page.goto(pencil);
-  await frame(page).locator('[data-mode="2"]').click();
+  await frame(page).locator('[data-mode="3"]').click();
   await frame(page).locator('#auto').click();
   await expect.poll(async () => (await state(page)).pos).toBe(1);
   expect(ink(await state(page)), 'An automatic eraser cannot deposit ink on blank paper').toBe(0);
@@ -798,4 +807,143 @@ test('enlarged dialog controls fit the parent viewport and accept real pointer i
   await expect(dialog).not.toBeVisible();
   await expect(frame(page).locator('#expand-view')).toBeFocused();
   await expect.poll(async () => Math.abs((await iframe.boundingBox())!.height - naturalHeight)).toBeLessThanOrEqual(2);
+});
+
+test('redesign: structure renders and picks, materials explain their sources, writing shows the recipe', async ({ page }, testInfo) => {
+  const screenshot = async (name: string) => {
+    if (['desktop-1440', 'mobile-390'].includes(testInfo.project.name)) {
+      await expect.poll(() => page.locator('[data-pencil-frame]').count().then(count =>
+        !count || frame(page).locator('.page').evaluate(el => el.getBoundingClientRect().bottom <= innerHeight + 1)
+      )).toBe(true);
+      await page.screenshot({ path: testInfo.outputPath(name + '.png'), fullPage: true, scale: 'css' });
+    }
+  };
+  const activate = (el: Locator) => testInfo.project.use.hasTouch ? el.tap() : el.click();
+  const storage = () => page.evaluate(() => ({ local: { ...localStorage }, session: { ...sessionStorage } }));
+  await page.goto(directory);
+  const initialStorage = await storage();
+  await expect(page.locator('[data-directory-material]')).toHaveCount(7);
+  const guide = page.locator('[data-directory-material="wood"]');
+  await activate(guide.locator('summary').first());
+  await expect(guide.locator('.origin-steps li')).toHaveCount(4);
+  await expect(guide.getByRole('link', { name: '探索铅笔 →' })).toBeVisible();
+  await screenshot('01-directory');
+  await activate(guide.getByRole('link', { name: '探索铅笔 →' }));
+  await ready3d(page);
+  const pencilFrame = frame(page);
+  const canvas = pencilFrame.locator('#pencil-3d');
+  const host = pencilFrame.locator('#three-host');
+  const view = (name: string) => pencilFrame.locator(`#view-buttons [data-view="${name}"]`);
+  // Compare the canvas's local rendered pixels without depending on page scroll or CSS position.
+  const pixels = () => canvas.evaluate(element => {
+    const target = document.createElement('canvas');
+    target.width = 160; target.height = 120;
+    const ctx = target.getContext('2d')!;
+    // Trigger a normal canvas draw immediately before reading WebGL's drawing buffer.
+    window.dispatchEvent(new Event('blur'));
+    ctx.drawImage(element as HTMLCanvasElement, 0, 0, 160, 120);
+    return target.toDataURL();
+  });
+  const assembled = await pixels();
+  await activate(view('xray'));
+  await expect(host).toHaveAttribute('data-view', 'xray');
+  expect(await pixels()).not.toBe(assembled);
+  await screenshot('02-xray');
+  await activate(view('assembled'));
+  expect(await pixels()).toBe(assembled);
+  const slider = pencilFrame.locator('#explode-slider');
+  const renders = [];
+  for (const [key, expected] of [['Home', 0], ['PageUp', 50], ['End', 100]] as const) {
+    await slider.press(key);
+    if (expected === 50) {
+      for (let i = 0; i < 4; i++) await slider.press('PageUp');
+    }
+    await expect(slider).toHaveValue(String(expected));
+    await expect(host).toHaveAttribute('data-explode-amount', String(expected / 100));
+    renders.push(await pixels());
+  }
+  expect(new Set(renders).size).toBe(3);
+  await expect(pencilFrame.locator('#boom')).toHaveText('合起来');
+  await activate(pencilFrame.locator('#boom'));
+  await expect(slider).toHaveValue('0');
+  await activate(pencilFrame.locator('#boom'));
+  await expect(slider).toHaveValue('100');
+  await expect(pencilFrame.locator('#part-labels')).toBeVisible();
+  await activate(pencilFrame.locator('#toggle-labels'));
+  await expect(pencilFrame.locator('#part-labels')).not.toBeVisible();
+  await activate(pencilFrame.locator('#toggle-labels'));
+  await activate(pencilFrame.locator('[data-inspect-part="core"]'));
+  await expect(host).toHaveAttribute('data-selected', 'core');
+  await expect(pencilFrame.locator('#part-materials')).toContainText('石墨');
+  await expect(pencilFrame.locator('#part-materials')).toContainText('黏土');
+  await expect(pencilFrame.locator('#inspector-dialog')).not.toBeVisible();
+  await screenshot('03-exploded-focus');
+  await activate(pencilFrame.locator('#inspect-part'));
+  await expect(host).toHaveAttribute('data-inspecting', 'true');
+  await page.keyboard.press('Escape');
+  await expect(pencilFrame.locator('#inspect-part')).toBeFocused();
+  await expect(host).toHaveAttribute('data-selected', 'core');
+  for (const [section, name] of [['cross','04-cross-focus'], ['longitudinal','05-longitudinal-focus']]) {
+    await activate(view(section));
+    await activate(pencilFrame.locator('[data-inspect-part="all"]'));
+    const before = await pixels();
+    await canvas.scrollIntoViewIfNeeded();
+    const coreAnchor = pencilFrame.locator('[data-part-label="core"]');
+    await expect(coreAnchor).toBeVisible();
+    const anchor = await coreAnchor.boundingBox();
+    expect(anchor).not.toBeNull();
+    // Click the projected anchor, which remains on the mesh when the bubble avoids a neighbor.
+    const x = anchor!.x + anchor!.width / 2, y = anchor!.y + anchor!.height / 2;
+    if (testInfo.project.use.hasTouch) await page.touchscreen.tap(x, y);
+    else await page.mouse.click(x, y);
+    await expect(host).toHaveAttribute('data-selected', 'core');
+    expect(await pixels()).not.toBe(before);
+    await expect(pencilFrame.locator('#inspector-dialog')).not.toBeVisible();
+    await screenshot(name);
+  }
+  await activate(pencilFrame.locator('#part-origin'));
+  await expect(pencilFrame.locator('#material-title')).toBeFocused();
+  await expect(pencilFrame.locator('#material-title')).toContainText('石墨');
+  const names = ['软质直纹木材', '石墨', '颜料与树脂', '木工胶黏剂', '植物纤维'];
+  for (let i = 0; i < names.length; i++) {
+    const node = pencilFrame.locator(`[data-map-node="${i}"]`);
+    const box = await node.boundingBox();
+    expect(box!.height).toBeGreaterThanOrEqual(48);
+    expect(box!.width).toBeGreaterThanOrEqual(48);
+    await activate(node);
+    await expect(node).toHaveAttribute('aria-pressed', 'true');
+    await expect(pencilFrame.locator('#material-title')).toContainText(names[i]);
+    await expect(pencilFrame.locator('#material-story .origin-steps li')).toHaveCount(4);
+    const question = pencilFrame.locator('#material-story .material-quiz');
+    await activate(question.locator('summary'));
+    await expect(question.locator('p')).toBeVisible();
+  }
+  await activate(pencilFrame.locator('[data-material-choice="rubber"]'));
+  await expect(pencilFrame.locator('#material-title')).toContainText('天然橡胶');
+  await activate(pencilFrame.locator('[data-map-node="1"]'));
+  await activate(pencilFrame.locator('[data-material-choice="clay"]'));
+  await expect(pencilFrame.locator('#material-title')).toContainText('细黏土');
+  await activate(pencilFrame.locator('[data-map-node="0"]'));
+  await screenshot('06-material-map');
+  await activate(pencilFrame.locator('[data-mode="2"]'));
+  const widths = [];
+  for (const grade of ['2H', 'HB', '2B']) {
+    await pencilFrame.locator('#grade').selectOption(grade);
+    const ratio = pencilFrame.locator('#free-ratio .ratio');
+    await expect(ratio).toHaveAttribute('data-ratio-grade', grade);
+    widths.push((await ratio.locator('.ratio-bar span').first().boundingBox())!.width);
+  }
+  expect(widths[0]).toBeLessThan(widths[1]);
+  expect(widths[1]).toBeLessThan(widths[2]);
+  await pencilFrame.locator('#position').press('End');
+  await expect.poll(async () => ink(await state(page))).toBeGreaterThan(10);
+  await activate(pencilFrame.locator('#compare-run'));
+  await expect(pencilFrame.locator('#comparison-results .ratio')).toHaveCount(3);
+  await expect(pencilFrame.locator('#compare-result')).toContainText('石墨比例越高');
+  await screenshot('07-writing-comparison');
+  await activate(pencilFrame.locator('[data-mode="3"]'));
+  await activate(pencilFrame.locator('[data-origin-link="rubber"]'));
+  await expect(pencilFrame.locator('#material-title')).toContainText('天然橡胶');
+  await expect(pencilFrame.locator('#material-title')).toBeFocused();
+  expect(await storage()).toEqual(initialStorage);
 });

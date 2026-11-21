@@ -10,3 +10,27 @@
 .structure-explorer-mount{background:#fff;min-height:100dvh}
 .structure-footer{display:flex;flex-wrap:wrap;gap:20px;border-top:1px solid #d4d8d5;padding-top:12px}.structure-footer a{display:inline-flex;min-height:48px;align-items:center;color:#2c6157;padding:8px}
 @media(max-width:650px){.structure-explorer{padding:20px 16px 32px}.structure-header{align-items:flex-start;flex-direction:column;gap:10px}.structure-header h1{font-size:28px}.structure-card{grid-template-columns:1fr}.structure-card img{height:auto}.structure-card>div{padding:20px}.structure-intro h2{font-size:23px}}
+
+.structure-materials { margin-top: 34px; padding-top: 24px; border-top: 1px solid #dddacc; }
+.structure-materials h2, .structure-materials>p { margin: 0 0 6px; }
+.directory-materials { display: grid; grid-template-columns: repeat(2, minmax(0,1fr)); align-items: start; gap: 12px; margin-top: 15px; }
+.directory-material { background: #fffef8; border: 1px solid #d8d3c3; border-radius: 12px; }
+.directory-material>summary { display: flex; position: relative; align-items: center; gap: 10px; min-height: 56px; padding: 10px 38px 10px 14px; cursor: pointer; list-style: none; }
+.directory-material>summary::-webkit-details-marker { display: none; }
+.directory-material>summary::after { content: '＋'; position: absolute; right: 12px; color: #315c5a; }
+.directory-material[open]>summary::after { content: '－'; }
+.directory-material>summary:focus-visible { outline: 3px solid #316c91; border-radius: 10px; }
+.directory-material small { display: block; color: #52635a; }
+.directory-material-story { padding: 0 14px 14px; }
+.directory-material-story h3 { margin-bottom: 0; font-size: 16px; }
+.directory-material-story a { display: inline-flex; min-height: 44px; align-items: center; color: #315c5a; text-decoration: underline; }
+@media(max-width:650px) { .directory-materials { grid-template-columns: minmax(0,1fr); } }
+
+@media(max-width:430px) {
+  .structure-explorer[data-structure-view="pencil"] { padding-top: 10px; }
+  .structure-explorer[data-structure-view="pencil"] .structure-header { flex-direction: row; align-items: center; gap: 8px; padding-bottom: 8px; }
+  .structure-explorer[data-structure-view="pencil"] .structure-header h1 { font-size: 23px; white-space: nowrap; }
+  .structure-explorer[data-structure-view="pencil"] .structure-header nav { justify-content: flex-end; gap: 0 4px; }
+  .structure-explorer[data-structure-view="pencil"] .structure-header a { font-size: 14px; padding: 4px 6px; }
+  .structure-explorer[data-structure-view="pencil"] .structure-eyebrow { display: none; }
+}

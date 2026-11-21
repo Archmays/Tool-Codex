@@ -1,0 +1,18 @@
+.material-swatch {
+  display: inline-block; width: 1rem; height: 1rem; flex: none;
+  border: 1px solid #55423138; border-radius: 50%; background: var(--swatch);
+}
+.material-icon { width: 26px; height: 26px; flex: none; color: #395f4e; }
+.material-traits { display: flex; flex-wrap: wrap; gap: 6px; margin: 12px 0; padding: 0; list-style: none; }
+.material-traits li { display: inline-flex; align-items: center; gap: 6px; padding: 4px 9px; border-radius: 24px; background: #eef1e5; font-size: 14px; }
+.material-traits li:not(:has(.material-swatch))::before { content: ''; width: 7px; height: 7px; border-radius: 50%; background: #58775b; }
+.material-source { color: #4b5953; }
+.origin-steps { display: grid; gap: 9px; padding: 0; margin: 16px 0; list-style: none; }
+.origin-steps li { display: flex; align-items: start; gap: 11px; padding: 12px; background: #faf8ef; border: 1px solid #e5dcc8; border-radius: 10px; }
+.origin-steps .material-icon { margin-top: 3px; }
+.origin-steps p { margin: 4px 0 0; font-size: 15px; }
+.origin-stage, .material-boundary { color: #52635a; font-size: 14px; }
+.material-quiz { border-top: 1px solid #d7dfd4; }
+.material-quiz summary { cursor: pointer; min-height: 44px; box-sizing: border-box; padding: 8px 0; }
+.material-quiz summary:focus-visible { outline: 3px solid #316c91; outline-offset: 2px; }
+.material-quiz p { margin-top: 4px; }

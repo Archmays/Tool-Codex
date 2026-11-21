@@ -65,7 +65,7 @@ const GAMES: readonly SmokeGame[] = [
       await expect(demo.locator('canvas#pencil-3d')).toBeVisible();
       await demo.locator('#boom').click();
       await expect(demo.locator('#three-host')).toHaveAttribute('data-exploded', 'true');
-      await expect(demo.locator('#readout')).toContainText('五个观察对象');
+      await expect(demo.locator('#readout')).toHaveText('拆开看');
       await page.locator('[data-structure-directory]').click();
       await expect(page.locator('[data-structure-pencil]')).toBeVisible();
       await page.locator('[data-structure-home]').click();
