@@ -911,13 +911,31 @@ test('redesign: structure renders and picks, materials explain their sources, wr
     if (section === 'cross') {
       const bubbles = host.locator('.part-label-anchor:visible span');
       await expect(bubbles).toHaveCount(6);
-      const clipped = await bubbles.evaluateAll(labels => labels.flatMap(label => {
-        const box = label.getBoundingClientRect();
-        const hostBox = label.closest('#three-host')!.getBoundingClientRect();
-        return box.left < hostBox.left || box.top < hostBox.top ||
-          box.right > hostBox.right || box.bottom > hostBox.bottom ? [label.textContent] : [];
-      }));
+      const { clipped, overlapping, order, seamOnRight } = await bubbles.evaluateAll(labels => {
+        const boxes = labels.map(label => ({
+          id: label.closest<HTMLElement>('.part-label-anchor')!.dataset.partLabel,
+          box: label.getBoundingClientRect(),
+        }));
+        const hostBox = labels[0].closest('#three-host')!.getBoundingClientRect();
+        const clipped = boxes.filter(({ box }) => box.left < hostBox.left || box.top < hostBox.top ||
+          box.right > hostBox.right || box.bottom > hostBox.bottom).map(({ id }) => id);
+        const overlapping = boxes.flatMap(({ id, box }, index) => boxes.slice(index + 1)
+          .filter(({ box: other }) => box.left < other.right && other.left < box.right &&
+            box.top < other.bottom && other.top < box.bottom)
+          .map(other => [id, other.id]));
+        const layers = boxes.filter(({ id }) => id !== 'seam').sort((a, b) => a.box.top - b.box.top);
+        const seam = boxes.find(({ id }) => id === 'seam')!;
+        return {
+          clipped, overlapping, order: layers.map(({ id }) => id),
+          seamOnRight: layers.every(({ box }) => box.right < seam.box.left),
+        };
+      });
       expect(clipped, 'Cross-section bubbles fit inside the canvas').toEqual([]);
+      expect(overlapping, 'Cross-section bubbles do not overlap').toEqual([]);
+      expect(order, 'Cross-section labels follow the layers from top to bottom').toEqual([
+        'paint-upper', 'wood-upper', 'core', 'wood-lower', 'paint-lower',
+      ]);
+      expect(seamOnRight, 'The seam label is alongside the layer column').toBe(true);
     }
     await screenshot(name);
   }

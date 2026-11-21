@@ -11,7 +11,7 @@ const groupedParts: Partial<Record<PencilPartId, PencilPartId[]>> = {
 const offsets: Record<string, number> = { 'paint-upper': 3.3, 'wood-upper': 1.65, core: 0, 'wood-lower': -1.65, 'paint-lower': -3.3 };
 
 /** The same meshes are assembled, exploded and ray-picked. No projected SVG substitutes. */
-export function createPencil3D(host: HTMLElement, notify: (state: StructureState) => void, picked: (id: PencilPartId) => void, projectLabels: (points: Anchor[]) => void) {
+export function createPencil3D(host: HTMLElement, notify: (state: StructureState) => void, picked: (id: PencilPartId) => void, projectLabels: (points: Anchor[], referenceBottom: number) => void) {
   const scene = new THREE.Scene();
   scene.background = new THREE.Color('#f4f7f3');
   const camera = new THREE.OrthographicCamera(-7, 7, 5, -5, .1, 100);
@@ -123,6 +123,7 @@ export function createPencil3D(host: HTMLElement, notify: (state: StructureState
     camera.top = height / (2 * scale); camera.bottom = -camera.top; camera.updateProjectionMatrix();
   }
   const point = new THREE.Vector3();
+  const referenceBounds = new THREE.Box3();
   function project() {
     const group = cross.visible ? cross : longitudinal.visible ? longitudinal : root;
     const points: Anchor[] = [];
@@ -145,7 +146,14 @@ export function createPencil3D(host: HTMLElement, notify: (state: StructureState
       node.localToWorld(point).project(camera);
       if (Math.abs(point.x) < 1 && Math.abs(point.y) < 1) points.push({ id, x: (point.x + 1) * canvas.clientWidth / 2, y: (1 - point.y) * canvas.clientHeight / 2 });
     }
-    projectLabels(points);
+    let referenceBottom = 0;
+    if (cross.visible) {
+      referenceBounds.setFromObject(cutReference);
+      // This camera looks along Z, so the bounds' lowest world Y gives the visual bottom.
+      point.copy(referenceBounds.min).project(camera);
+      referenceBottom = (1 - point.y) * canvas.clientHeight / 2;
+    }
+    projectLabels(points, referenceBottom);
   }
   function draw() { if (disposed || contextLost || !active) return; layout(); renderer.render(scene, camera); publish(); project(); }
   function resize() { if (disposed) return; const w = Math.max(1, host.clientWidth), h = Math.max(1, host.clientHeight); renderer.setSize(w, h, false); draw(); }

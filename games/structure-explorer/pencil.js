@@ -102,17 +102,60 @@ function renderParts() {
   $('#inspect-part').hidden = part === 'all';
 }
 const labelAnchors = new Map();
-function renderLabels(points) {
+const crossLabelOrder = ['paint-upper', 'wood-upper', 'core', 'wood-lower', 'paint-lower'];
+const labelInset = 8;
+const clamp = (value, min, max) => Math.max(min, Math.min(max, value));
+
+function positionLabel(label, left, top) {
+  const { anchor, bubble, x, y } = label;
+  anchor.style.left = x + 'px';
+  anchor.style.top = y + 'px';
+  bubble.style.left = (left - x + anchor.offsetWidth / 2) + 'px';
+  bubble.style.top = (top - y + anchor.offsetHeight / 2) + 'px';
+}
+
+function positionCrossLabels(labels, width, height, referenceBottom) {
+  const layers = crossLabelOrder.map(id => labels.get(id)).filter(Boolean);
+  const seam = labels.get('seam');
+  const center = labels.get('core') ?? layers[0];
+  if (center) {
+    const halfWidth = Math.max(...layers.map(label => label.halfWidth));
+    const seamSpace = seam ? seam.halfWidth * 2 + labelInset : 0;
+    const left = clamp(center.x, labelInset + halfWidth, width - labelInset - halfWidth - seamSpace);
+    const rowHeight = 2 * Math.max(...layers.map(label => label.halfHeight));
+    const gapCount = layers.length - 1;
+    const available = height - 2 * labelInset - rowHeight * layers.length;
+    const gap = clamp(available / Math.max(1, gapCount), 0, 6);
+    const pitch = rowHeight + gap;
+    const lastTop = height - labelInset - rowHeight / 2;
+    const firstLimit = lastTop - pitch * gapCount;
+    // Leave room for every lower layer before placing the current one.
+    let nextTop = Math.min(firstLimit, Math.max(labelInset, referenceBottom + gap) + rowHeight / 2);
+    layers.forEach((label, index) => {
+      const latestTop = lastTop - pitch * (gapCount - index);
+      const preferredTop = label.y + (label.id === 'core' ? -22 : 0);
+      const top = clamp(preferredTop, nextTop, latestTop);
+      positionLabel(label, left, top);
+      nextTop = top + pitch;
+    });
+    if (seam) {
+      const seamLeft = Math.max(seam.x + seam.halfWidth + 6, left + halfWidth + labelInset + seam.halfWidth);
+      positionLabel(seam, Math.min(seamLeft, width - labelInset - seam.halfWidth),
+        clamp(seam.y, labelInset + seam.halfHeight, height - labelInset - seam.halfHeight));
+    }
+  } else if (seam) {
+    positionLabel(seam, clamp(seam.x + seam.halfWidth + 6, labelInset + seam.halfWidth, width - labelInset - seam.halfWidth),
+      clamp(seam.y, labelInset + seam.halfHeight, height - labelInset - seam.halfHeight));
+  }
+}
+
+function renderLabels(points, referenceBottom) {
   const layer = $('#part-labels');
   layer.hidden = !showLabels;
   if (!showLabels) return;
   const { clientWidth: width, clientHeight: height } = layer;
-  const inset = 8;
-  const clamp = (value, min, max) => Math.max(min, Math.min(max, value));
-  const used = [];
-  const visibleIds = new Set();
+  const labels = new Map();
   for (const { id, x, y } of points) {
-    visibleIds.add(id);
     let anchor = labelAnchors.get(id);
     if (!anchor) {
       anchor = document.createElement('div');
@@ -126,19 +169,26 @@ function renderLabels(points) {
     }
     anchor.hidden = false;
     const bubble = anchor.firstElementChild;
-    const halfWidth = bubble.offsetWidth / 2;
-    const halfHeight = bubble.offsetHeight / 2;
-    const isCrossPaint = view === 'cross' && id.startsWith('paint');
+    labels.set(id, { id, x, y, anchor, bubble, halfWidth: bubble.offsetWidth / 2, halfHeight: bubble.offsetHeight / 2 });
+  }
+  for (const [id, anchor] of labelAnchors) anchor.hidden = !labels.has(id);
+  if (view === 'cross') {
+    positionCrossLabels(labels, width, height, referenceBottom);
+    return;
+  }
+  const used = [];
+  for (const label of labels.values()) {
+    const { id, x, y, halfWidth, halfHeight } = label;
     const direction = id.endsWith('upper') ? -1 : 1;
-    const left = clamp(x + (isCrossPaint ? 44 : 0), inset + halfWidth, width - inset - halfWidth);
-    const minTop = inset + halfHeight;
-    const maxTop = height - inset - halfHeight;
-    const initialTop = clamp(y + (isCrossPaint ? 0 : id === 'core' ? -22 : direction * 20), minTop, maxTop);
-    const step = bubble.offsetHeight + 5;
+    const left = clamp(x, labelInset + halfWidth, width - labelInset - halfWidth);
+    const minTop = labelInset + halfHeight;
+    const maxTop = height - labelInset - halfHeight;
+    const initialTop = clamp(y + (id === 'core' ? -22 : direction * 20), minTop, maxTop);
+    const step = 2 * halfHeight + 5;
     let top = initialTop;
-    const overlaps = candidate => used.some(label =>
-      Math.abs(label.left - left) < label.halfWidth + halfWidth + 4 &&
-      Math.abs(label.top - candidate) < label.halfHeight + halfHeight + 4
+    const overlaps = candidate => used.some(placed =>
+      Math.abs(placed.left - left) < placed.halfWidth + halfWidth + 4 &&
+      Math.abs(placed.top - candidate) < placed.halfHeight + halfHeight + 4
     );
     for (let offset = step; overlaps(top) && offset < height; offset += step) {
       const preferred = initialTop + direction * offset;
@@ -147,12 +197,8 @@ function renderLabels(points) {
       else if (alternate >= minTop && alternate <= maxTop && !overlaps(alternate)) top = alternate;
     }
     used.push({ left, top, halfWidth, halfHeight });
-    anchor.style.left = x + 'px';
-    anchor.style.top = y + 'px';
-    bubble.style.left = (left - x + anchor.offsetWidth / 2) + 'px';
-    bubble.style.top = (top - y + anchor.offsetHeight / 2) + 'px';
+    positionLabel(label, left, top);
   }
-  for (const [id, anchor] of labelAnchors) anchor.hidden = !visibleIds.has(id);
 }
 function structureChanged(s) {
   $('#drag-rotate').setAttribute('aria-pressed', String(s.dragMode === 'rotate'));
